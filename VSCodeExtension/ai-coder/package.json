@@ -15,14 +15,14 @@
     "commands": [
       {
         "command": "ai-coder.firstAnswer",
-        "title": "AI coder"
+        "title": "ai-coder"
       }
     ],
     "menus": {
       "editor/context": [
         {
           "command": "extension.sayHello",
-          "group": "YourGroup@1"
+          "group": "ai-coder"
         }
       ]
     }
