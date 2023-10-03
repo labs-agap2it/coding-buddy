@@ -14,10 +14,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "ai-coder.helloWorld",
-        "title": "Hello World"
+        "command": "ai-coder.firstAnswer",
+        "title": "AI coder"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "extension.sayHello",
+          "group": "YourGroup@1"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
