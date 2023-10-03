@@ -21,7 +21,7 @@
     "menus": {
       "editor/context": [
         {
-          "command": "extension.sayHello",
+          "command": "extension.firstAnswer",
           "group": "ai-coder"
         }
       ]
