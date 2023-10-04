@@ -21,7 +21,7 @@
     "menus": {
       "editor/context": [
         {
-          "command": "extension.firstAnswer",
+          "command": "ai-coder.firstAnswer",
           "group": "ai-coder"
         }
       ]
