@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, Table
-from .base import metadata
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer
 
-Users = Table(
-    'Users', metadata,
-    Column('Id', Integer, primary_key=True)
-)
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'Users'
+    Id = Column(Integer, primary_key=True)
