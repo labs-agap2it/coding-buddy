@@ -1,1 +1,0 @@
-All VS Code related code should go here.

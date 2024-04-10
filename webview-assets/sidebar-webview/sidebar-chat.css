@@ -1,0 +1,72 @@
+body {
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+.container{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    height:100vh;
+}
+
+.input-box{
+    width:calc(100% - 2rem);
+    padding:1rem;
+    border-top:1px solid var(--vscode-activityBar-dropBorder);
+}
+
+.hidden{
+    display:none !important;
+}
+
+.info-container{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-wrapper{
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    border:1px solid var(--vscode-activityBar-dropBorder);
+    border-radius:5px;
+}
+
+.input-box input{
+    color:var(--vscode-foreground);
+    width:100%;
+    padding:0.5rem;
+    border:0;
+    background-color: var(--vscode-activityBar-background);
+}
+
+.message-chat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--vscode-activityBar-dropBorder);
+    padding: 1rem;
+}
+
+.message-chat-box p{
+    margin:0;
+    overflow-wrap:anywhere;
+    height:auto;
+}
+
+.chatbox{
+    border-top:1px solid var(--vscode-activityBar-dropBorder);
+    width:100%;
+    height:calc(100% - 4rem - 1px);
+    overflow-y:auto;
+}
+
+.input-button{
+    background-color: var(--vscode-activityBar-background);
+    padding:0.5rem;
+    border-left:1px solid var(--vscode-activityBar-dropBorder);
+}
