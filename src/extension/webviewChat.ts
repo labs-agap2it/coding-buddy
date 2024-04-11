@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
-import * as buddy from "../CodingBuddyUtils/llmConnection";
-import * as assets from '../utils/configUtils';
+import * as buddy from "../llm/connection";
+import * as savedSettings from "../settings/savedSettings";
+import * as chatHistory from "../chat/chatHistory";
 
 export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "coding-buddy.buddyWebview";
@@ -21,7 +22,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     };
 
     webviewView.webview.html = await this._getHtmlForWebview(webviewView.webview);
-  
+
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
         case 'user-prompt':
@@ -32,23 +33,29 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
           }
           break;
         case 'requesting-history':
-          let validateApiKey = assets.getUserToken();
+          let validateApiKey = savedSettings.getAPIKey();
           if(!validateApiKey){
-            vscode.window.showErrorMessage("No API Key provided. Please provide an API Key in 'Set Coding Buddy Defaults' in the command palette.");
             webviewView.webview.postMessage({type: 'no-api-key'});
             return;
           }
           
-          let history = assets.getMessageHistory();
+          let history = chatHistory.getOpenedChat();
           webviewView.webview.postMessage({type: 'history', value: history});
           break;
       }
     });
-
   }
 
-  
+  public clearChat(){
+    console.log(this._view);
+    this._view?.webview.postMessage({type: 'clear-chat'});
+  }
 
+  public changeChat(){
+    this._view?.webview.postMessage({type: 'clear-chat'});
+    let history = chatHistory.getOpenedChat();
+    this._view?.webview.postMessage({type: 'history', value: history});
+  }
 
   async _getHtmlForWebview(webview: vscode.Webview) {
     const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'webview-assets/sidebar-webview', 'sidebar-chat.css'));

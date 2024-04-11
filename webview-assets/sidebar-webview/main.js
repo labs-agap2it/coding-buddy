@@ -59,21 +59,23 @@ window.addEventListener('message', event =>{
             document.getElementById('message-box').ariaDisabled = false;
         break;
         case 'history':
-            let messages = JSON.parse(message.value);
+            let messages = message.value;
             if(messages.length === 0){
                 return;
             }
             messages.forEach(element =>{
-                console.log(element["llm-response"].chat);
-                addNewChatBox(element["user-message"], true);
-                if(element["llm-response"].chat){
-                    addNewChatBox(element["llm-response"].chat, false);
+                addNewChatBox(element.userMessage, true);
+                if(element.llmResponse.chat){
+                    addNewChatBox(element.llmResponse.chat, false);
                 }else{
-                    addNewChatBox(element["llm-response"].explanation, false);
+                    addNewChatBox(element.llmResponse.explanation, false);
                 }
             });
             document.getElementById('message-box').focus();
             
+        break;
+        case 'clear-chat':
+            document.getElementById('chat-container').innerHTML = '';
         break;
     }
 });
