@@ -25,13 +25,22 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
 const vscode = __importStar(require("vscode"));
-const codingBuddyChat_1 = require("./extension/codingBuddyChat");
-const settingEditor_1 = require("./extension/settingEditor");
+const webviewChat_1 = require("./extension/webviewChat");
+const chatService = __importStar(require("./extension/chatService"));
 function activate(context) {
-    const provider = new codingBuddyChat_1.CodingBuddyViewProvider(context.extensionUri);
-    const codingBuddyWebviewProvider = vscode.window.registerWebviewViewProvider(codingBuddyChat_1.CodingBuddyViewProvider.viewType, provider);
-    const settingEditor = vscode.commands.registerCommand('coding-buddy.setDefaults', async () => (0, settingEditor_1.addUserDefaults)());
-    context.subscriptions.push(codingBuddyWebviewProvider, settingEditor);
+    const provider = new webviewChat_1.CodingBuddyViewProvider(context.extensionUri);
+    const codingBuddyWebviewProvider = vscode.window.registerWebviewViewProvider(webviewChat_1.CodingBuddyViewProvider.viewType, provider);
+    const newChatWebview = vscode.commands.registerCommand('coding-buddy.newChat', async () => {
+        chatService.openNewChat(provider);
+    });
+    const deleteChatWebview = vscode.commands.registerCommand('coding-buddy.deleteChat', async () => {
+        chatService.deleteChat(provider);
+    });
+    const changeChatWebview = vscode.commands.registerCommand('coding-buddy.changeChat', async () => {
+        chatService.changeChat(provider);
+    });
+    const openSettings = vscode.commands.registerCommand('coding-buddy.goToSettings', async () => vscode.commands.executeCommand('workbench.action.openSettings', 'coding-buddy'));
+    context.subscriptions.push(codingBuddyWebviewProvider, openSettings);
 }
 exports.activate = activate;
 function deactivate() { }

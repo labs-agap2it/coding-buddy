@@ -12,24 +12,45 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration":[
+      {
+        "title": "Coding Buddy",
+        "properties": {
+          "codingBuddy.apiKey": {
+            "type": "string",
+            "default": "",
+            "description": "OpenAI API Key"
+          },
+          "codingBuddy.maxSavedMessages": {
+            "type": "number",
+            "default": 5,
+            "description": "Maximum number of sent messages to Coding Buddy per chat. Needs to be between 1 and 25, and if set under or above these values, it will be set to the closest value."
+          },
+          "codingBuddy.clearChatOnClose": {
+            "type": "boolean",
+            "default": false,
+            "description": "Clear chat when closing Visual Studio Code."
+          }
+        }
+      }
+    ],
     "menus": {
-      "webview/context":[
+      "view/title":[
         {
-          "command": "coding-buddy.webviewSettings",
-          "when": "webview == buddyChat",
-          "group": "navigation"
+          "command": "coding-buddy.newChat",
+          "group": "navigation@0"
         },
         {
           "command": "coding-buddy.changeChat",
-          "when": "view == buddyChat"
+          "group": "navigation@1"
         },
         {
-          "command": "coding-buddy.changeMessageAmount",
-          "when": "view == buddyChat"
+          "command": "coding-buddy.deleteChat",
+          "group": "navigation@2"
         },
         {
-          "command": "coding-buddy.setAPIKey",
-          "when": "view == buddyChat"
+          "command": "coding-buddy.goToSettings",
+          "group":"navigation@3"
         }
       ]
     },
@@ -54,9 +75,10 @@
     },
     "commands": [
       {
-        "command": "coding-buddy.webviewSettings",
-        "title": "Settings",
-        "icon":  "media/buddyChat.png"
+        "command": "coding-buddy.newChat",
+        "title": "Create Chat",
+        "category": "Coding Buddy",
+        "icon": "$(add)"
       },
       {
         "command": "coding-buddy.setDefaults",
@@ -66,16 +88,19 @@
       {
         "command": "coding-buddy.changeChat",
         "title": "Change Chat",
+        "icon": "$(references)",
         "category": "Coding Buddy"
       },
       {
-        "command": "coding-buddy.changeMessageAmount",
-        "title": "Change Message Amount",
+        "command": "coding-buddy.deleteChat",
+        "title": "Delete Chat",
+        "icon": "$(trash)",
         "category": "Coding Buddy"
       },
       {
-        "command": "coding-buddy.setAPIKey",
-        "title": "Set API Key",
+        "command": "coding-buddy.goToSettings",
+        "title": "Go to Settings",
+        "icon": "$(gear)",
         "category": "Coding Buddy"
       }
     ]

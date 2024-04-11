@@ -25,10 +25,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addUserDefaults = void 0;
 const vscode = __importStar(require("vscode"));
-const asset = __importStar(require("../utils/configUtils"));
-const apiTest = __importStar(require("../utils/apiTest"));
+const connection = __importStar(require("../llm/connection"));
 async function addUserDefaults() {
-    let existingKey = asset.getUserToken();
+    let existingKey = connection.getAPIKey();
     let existingSaveHistory = asset.getUserSettings();
     let apiKey = await vscode.window.showInputBox({
         title: "Enter your openAI API Key",
@@ -39,7 +38,7 @@ async function addUserDefaults() {
         vscode.window.showInformationMessage("No key provided");
         return;
     }
-    let apiKeyValidity = await apiTest.testAPIKey(apiKey);
+    let apiKeyValidity = await connection.testAPIKey(apiKey);
     if (!apiKeyValidity) {
         return;
     }

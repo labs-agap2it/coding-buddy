@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.saveMessageHistory = exports.getMessageHistory = exports.setUserSettings = exports.getUserSettings = exports.setUserToken = exports.getUserToken = void 0;
+exports.setUserSettings = exports.getUserSettings = exports.setUserToken = exports.getUserToken = void 0;
 const fs = __importStar(require("fs"));
 const os = __importStar(require("os"));
 function getUserToken() {
@@ -58,43 +58,4 @@ function setUserSettings(maxChatNumber) {
     fs.writeFileSync(settingsPath, settings);
 }
 exports.setUserSettings = setUserSettings;
-function getMessageHistory() {
-    try {
-        let chatHistory = fs.readFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json');
-        if (chatHistory) {
-            return chatHistory.toString();
-        }
-        else {
-            return "";
-        }
-    }
-    catch (e) {
-        return "";
-    }
-}
-exports.getMessageHistory = getMessageHistory;
-function saveMessageHistory(response, message) {
-    let chatHistory = getMessageHistory();
-    let jsonHistory = [];
-    if (chatHistory !== "") {
-        try {
-            jsonHistory = JSON.parse(chatHistory.toString());
-        }
-        catch { }
-    }
-    let newMessage = {
-        "user-message": message,
-        "llm-response": response
-    };
-    jsonHistory.push(newMessage);
-    let maxChatNumber = getUserSettings();
-    if (!maxChatNumber) {
-        return;
-    }
-    if (jsonHistory.length > maxChatNumber) {
-        jsonHistory.shift();
-    }
-    fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(jsonHistory));
-}
-exports.saveMessageHistory = saveMessageHistory;
 //# sourceMappingURL=configUtils.js.map

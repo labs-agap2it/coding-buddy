@@ -25,8 +25,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CodingBuddyViewProvider = void 0;
 const vscode = __importStar(require("vscode"));
-const buddy = __importStar(require("../utils/llmUtils/llmConnection"));
-const assets = __importStar(require("../utils/configUtils"));
+const buddy = __importStar(require("../llm/connection"));
+const savedSettings = __importStar(require("../settings/savedSettings"));
+const chatHistory = __importStar(require("../chat/chatHistory"));
 class CodingBuddyViewProvider {
     _extensionUri;
     static viewType = "coding-buddy.buddyWebview";
@@ -50,17 +51,25 @@ class CodingBuddyViewProvider {
                     }
                     break;
                 case 'requesting-history':
-                    let validateApiKey = assets.getUserToken();
+                    let validateApiKey = savedSettings.getAPIKey();
                     if (!validateApiKey) {
-                        vscode.window.showErrorMessage("No API Key provided. Please provide an API Key in 'Set Coding Buddy Defaults' in the command palette.");
                         webviewView.webview.postMessage({ type: 'no-api-key' });
                         return;
                     }
-                    let history = assets.getMessageHistory();
+                    let history = chatHistory.getOpenedChat();
                     webviewView.webview.postMessage({ type: 'history', value: history });
                     break;
             }
         });
+    }
+    clearChat() {
+        console.log(this._view);
+        this._view?.webview.postMessage({ type: 'clear-chat' });
+    }
+    changeChat() {
+        this._view?.webview.postMessage({ type: 'clear-chat' });
+        let history = chatHistory.getOpenedChat();
+        this._view?.webview.postMessage({ type: 'history', value: history });
     }
     async _getHtmlForWebview(webview) {
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'webview-assets/sidebar-webview', 'sidebar-chat.css'));
@@ -94,4 +103,4 @@ function getNonce() {
     }
     return text;
 }
-//# sourceMappingURL=codingBuddyChat.js.map
+//# sourceMappingURL=webviewChat.js.map
