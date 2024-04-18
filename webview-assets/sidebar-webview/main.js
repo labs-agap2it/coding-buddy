@@ -8,17 +8,34 @@ window.addEventListener('message', event =>{
     }
 });
 
+function toggleLoader(){
+    let loader = document.getElementById('message-loader');
+    loader.classList.toggle('hidden');
+    console.log("ALGO aconteceu. Não sei o quê, mas aconteceu. Sques o loader ligou ou desligou. Já vemos.");
+}
 
 function addNewChatBox(message, isUser){
     let chatBox = document.createElement('div');
     chatBox.className = 'message-chat-box';
-    let name = document.createElement('p');
+    if(isUser){
+        chatBox.classList.add('chat-user');
+    }else{
+        chatBox.classList.add('chat-bot');
+    }
+    let name = document.createElement('b');
+    if(isUser){
+        name.className = 'user-name';
+    }else{
+        name.className = 'bot-name';
+    }
     name.innerHTML = isUser ? 'You' : 'Coding Buddy';
-    
+    let divider = document.createElement('div');
+    divider.className = 'divider';
     let messageBox = document.createElement('p');
     messageBox.innerHTML = message;
 
     chatBox.appendChild(name);
+    chatBox.appendChild(divider);
     chatBox.appendChild(messageBox);
 
     let container = document.getElementById('chat-container');
@@ -32,7 +49,6 @@ const vscode = acquireVsCodeApi();
 
 window.onload = function(){
     vscode.postMessage({type: 'requesting-history'});
-    console.log("Requesting history");
 };
 
 document.getElementById('send-button').addEventListener('click', ()=>{
@@ -41,6 +57,7 @@ document.getElementById('send-button').addEventListener('click', ()=>{
     if(!messageBox.value){ return; }
     messageBox.ariaDisabled = true;
     vscode.postMessage({type: 'user-prompt', value: messageBox.value});
+    toggleLoader();
     addNewChatBox(messageBox.value, true);
     messageBox.value = '';
 });
@@ -54,8 +71,16 @@ document.getElementById('message-box').addEventListener('keypress', (e)=>{
 window.addEventListener('message', event =>{
     const message = event.data;
     switch(message.type){
+        case 'pallette-message':
+            console.log("pallette message received");
+            toggleLoader();
+            addNewChatBox(message.value, true);
+            console.log("waiting for LLM response");
+        break;
         case 'response':
+            console.log("response received");
             processLLMResponse(message.value);
+            toggleLoader();
             document.getElementById('message-box').ariaDisabled = false;
         break;
         case 'history':

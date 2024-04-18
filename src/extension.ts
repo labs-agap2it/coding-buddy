@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { CodingBuddyViewProvider } from './extension/webviewChat';
 import * as chatService from './extension/chatService';
+import * as textChat from './extension/textChat';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -21,6 +22,9 @@ export function activate(context: vscode.ExtensionContext) {
 		chatService.changeChat(provider);
 	});
 
+	const showCommandPalletteChat = vscode.commands.registerCommand('coding-buddy.textChat', async () => {
+		textChat.showCommandPalletteChat(provider);	
+	});
 	const openSettings = vscode.commands.registerCommand('coding-buddy.goToSettings', async()=> vscode.commands.executeCommand('workbench.action.openSettings', 'coding-buddy'));
 
 	context.subscriptions.push(

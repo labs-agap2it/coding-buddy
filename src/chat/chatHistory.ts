@@ -61,7 +61,6 @@ export function deleteChat(){
 export function getOpenedChat():Message[] | undefined{
     let chatJSON:ChatData = getChatFile();
     if(chatJSON.chats[chatJSON.openedChat] === undefined){ return undefined; }
-    console.log(chatJSON.chats[chatJSON.openedChat].messages);
     return chatJSON.chats[chatJSON.openedChat].messages;
 }
 

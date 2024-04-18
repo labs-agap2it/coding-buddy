@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as buddy from "../llm/connection";
 import * as savedSettings from "../settings/savedSettings";
 import * as chatHistory from "../chat/chatHistory";
+import { clear } from "console";
 
 export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "coding-buddy.buddyWebview";
@@ -27,6 +28,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
       switch (data.type) {
         case 'user-prompt':
           let response = await buddy.getLLMJson(data.value);
+          console.log(response);
           if(response)
           {
             webviewView.webview.postMessage({type: 'response', value: response});
@@ -49,6 +51,13 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   public clearChat(){
     console.log(this._view);
     this._view?.webview.postMessage({type: 'clear-chat'});
+  }
+
+  public async sendMessage(value:string){
+    this._view?.webview.postMessage({type: 'pallette-message', value: value});
+    let response = await buddy.getLLMJson(value);
+    this._view?.webview.postMessage({type: 'response', value: response});
+    return response;
   }
 
   public changeChat(){
