@@ -86,13 +86,15 @@ export const rulesets =`
   Your response needs to be in a JSON format (delimited by ---JSON Start and ---JSON End), as the application will parse it and display it to the user.
 
   You will also be provided with a list of examples (delimited by ***Examples Start and ***Examples End) that you can use to help better understand the user's intentions, and therefore provide a better response.
+
+  You will also recieve the last messages exchanged between yourself and the user. They are generated in JSON format, so you should read that information in order to keep a conversation flow.
     `;
 
 export const jsonFormat =`
   
   ---JSON Start
   {
-    "chat":"Your response here" // If the user's intent is to chat with you. Empty if the user's intent isn't to chat with you. This output needs to be in html format.
+    "chat":"Your response here" // If the user's intent is to chat with you. Empty if the user's intent isn't to chat with you. This output needs to be in html format. You shouldn't include a "p" tag in the response.
     "code":[
       {
         "text": "Your code here",

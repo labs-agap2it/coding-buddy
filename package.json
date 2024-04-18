@@ -9,7 +9,8 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "configuration":[
@@ -75,6 +76,12 @@
     },
     "commands": [
       {
+        "command": "coding-buddy.textChat",
+        "title": "Text Chat",
+        "category": "Coding Buddy",
+        "icon": "$(comment-discussion)"
+      },
+      {
         "command": "coding-buddy.newChat",
         "title": "Create Chat",
         "category": "Coding Buddy",
@@ -102,6 +109,13 @@
         "title": "Go to Settings",
         "icon": "$(gear)",
         "category": "Coding Buddy"
+      }
+    ],
+    "keybindings":[
+      {
+        "command": "coding-buddy.textChat",
+        "key": "ctrl+shift+enter",
+        "when": "editorTextFocus"
       }
     ]
   },

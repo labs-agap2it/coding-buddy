@@ -46,6 +46,7 @@ class CodingBuddyViewProvider {
             switch (data.type) {
                 case 'user-prompt':
                     let response = await buddy.getLLMJson(data.value);
+                    console.log(response);
                     if (response) {
                         webviewView.webview.postMessage({ type: 'response', value: response });
                     }
@@ -65,6 +66,12 @@ class CodingBuddyViewProvider {
     clearChat() {
         console.log(this._view);
         this._view?.webview.postMessage({ type: 'clear-chat' });
+    }
+    async sendMessage(value) {
+        this._view?.webview.postMessage({ type: 'pallette-message', value: value });
+        let response = await buddy.getLLMJson(value);
+        this._view?.webview.postMessage({ type: 'response', value: response });
+        return response;
     }
     changeChat() {
         this._view?.webview.postMessage({ type: 'clear-chat' });

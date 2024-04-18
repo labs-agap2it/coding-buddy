@@ -40,6 +40,8 @@ async function getLLMJson(message) {
         return;
     }
     openai.apiKey = apiKey;
+    let messageHistory = JSON.stringify(chatHistory.getOpenedChat());
+    console.log(messageHistory);
     const completion = await openai.chat.completions.create({
         model: "gpt-4-1106-preview",
         response_format: { "type": "json_object" },
@@ -58,7 +60,7 @@ async function getLLMJson(message) {
             },
             {
                 role: "system",
-                content: "Message History: " + chatHistory.getOpenedChat() //Last messages exchanged between the user and Coding Buddy. The amount is to be set by the user.
+                content: "Message History: " + messageHistory //Last messages exchanged between the user and Coding Buddy. The amount is to be set by the user.
             },
             {
                 role: "system",

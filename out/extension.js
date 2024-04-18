@@ -27,6 +27,7 @@ exports.deactivate = exports.activate = void 0;
 const vscode = __importStar(require("vscode"));
 const webviewChat_1 = require("./extension/webviewChat");
 const chatService = __importStar(require("./extension/chatService"));
+const textChat = __importStar(require("./extension/textChat"));
 function activate(context) {
     const provider = new webviewChat_1.CodingBuddyViewProvider(context.extensionUri);
     const codingBuddyWebviewProvider = vscode.window.registerWebviewViewProvider(webviewChat_1.CodingBuddyViewProvider.viewType, provider);
@@ -38,6 +39,9 @@ function activate(context) {
     });
     const changeChatWebview = vscode.commands.registerCommand('coding-buddy.changeChat', async () => {
         chatService.changeChat(provider);
+    });
+    const showCommandPalletteChat = vscode.commands.registerCommand('coding-buddy.textChat', async () => {
+        textChat.showCommandPalletteChat(provider);
     });
     const openSettings = vscode.commands.registerCommand('coding-buddy.goToSettings', async () => vscode.commands.executeCommand('workbench.action.openSettings', 'coding-buddy'));
     context.subscriptions.push(codingBuddyWebviewProvider, openSettings);
