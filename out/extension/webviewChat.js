@@ -50,6 +50,9 @@ class CodingBuddyViewProvider {
                     if (response) {
                         webviewView.webview.postMessage({ type: 'response', value: response });
                     }
+                    else {
+                        webviewView.webview.postMessage({ type: 'error' });
+                    }
                     break;
                 case 'requesting-history':
                     let validateApiKey = savedSettings.getAPIKey();

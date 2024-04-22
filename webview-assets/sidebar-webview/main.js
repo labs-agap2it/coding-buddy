@@ -11,7 +11,6 @@ window.addEventListener('message', event =>{
 function toggleLoader(){
     let loader = document.getElementById('message-loader');
     loader.classList.toggle('hidden');
-    console.log("ALGO aconteceu. Não sei o quê, mas aconteceu. Sques o loader ligou ou desligou. Já vemos.");
 }
 
 function addNewChatBox(message, isUser){
@@ -52,10 +51,9 @@ window.onload = function(){
 };
 
 document.getElementById('send-button').addEventListener('click', ()=>{
-    console.log("clicked!");
     let messageBox = document.getElementById('message-box');
     if(!messageBox.value){ return; }
-    messageBox.ariaDisabled = true;
+    messageBox.disabled = true;
     vscode.postMessage({type: 'user-prompt', value: messageBox.value});
     toggleLoader();
     addNewChatBox(messageBox.value, true);
@@ -72,16 +70,13 @@ window.addEventListener('message', event =>{
     const message = event.data;
     switch(message.type){
         case 'pallette-message':
-            console.log("pallette message received");
             toggleLoader();
             addNewChatBox(message.value, true);
-            console.log("waiting for LLM response");
         break;
         case 'response':
-            console.log("response received");
             processLLMResponse(message.value);
             toggleLoader();
-            document.getElementById('message-box').ariaDisabled = false;
+            document.getElementById('message-box').disabled = false;
         break;
         case 'history':
             let messages = message.value;
@@ -102,13 +97,22 @@ window.addEventListener('message', event =>{
         case 'clear-chat':
             document.getElementById('chat-container').innerHTML = '';
         break;
+        case 'error':
+            toggleLoader();
+            document.getElementById('message-box').disabled = false;
+            addNewChatBox("There was an error processing your request. Please try again!", false);
+        break;
+        default:
+            if(document.getElementById('message-loader').classList.contains('hidden')){
+                toggleLoader();
+                document.getElementById('message-box').disabled = false;
+            }
+        break;
     }
 });
-console.log(document.getElementById('send-button'));
 }());
 
 function processLLMResponse(response){
-    ///document.getElementById('info-container').classList.add("hidden");
     if(response.chat){
         addNewChatBox(response.chat, false);
     }else if(response.explanation){

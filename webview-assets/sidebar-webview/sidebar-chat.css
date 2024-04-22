@@ -77,6 +77,12 @@ b.bot-name{
 
 }
 
+.chat-code{
+    display:block;
+    border:1px solid var(--vscode-activityBar-activeBorder);
+    padding: 0.5rem !important;
+}
+
 .divider{
     width:100%;
     height:1px;

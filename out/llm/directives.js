@@ -89,18 +89,23 @@ exports.rulesets = `
 
   You will also be provided with a list of examples (delimited by ***Examples Start and ***Examples End) that you can use to help better understand the user's intentions, and therefore provide a better response.
 
-  You will also recieve the last messages exchanged between yourself and the user. They are generated in JSON format, so you should read that information in order to keep a conversation flow.
+  You will also recieve the last messages exchanged between yourself and the user. This will be delimited by "### HISTORY START" and "### HISTORY END".
+  Your messages are placed inside "llmResponse", as per your own JSON file format, while the user's messages are placed inside "userMessage"
     `;
 exports.jsonFormat = `
   
   ---JSON Start
   {
-    "chat":"Your response here" // If the user's intent is to chat with you. Empty if the user's intent isn't to chat with you. This output needs to be in html format. You shouldn't include a "p" tag in the response.
+    "chat":"Your response here" // If the user's intent is to chat with you. Empty if the user's intent isn't to chat with you. This output needs to be in html format. You shouldn't include a "p" tag in the response. If the user asks for you to write code in the chat, answer with the <code> HTML Tag, with the class "chat-code". If you want to send a <code> tag but want to have other sentences in the same line, then send the HTML tag without any classes.
     "code":[
-      {
-        "text": "Your code here",
-        "line": 0, // The line number where the code should be inserted/edited
-      }], // If the user's intent is to generate, fix or explain code. Empty if any more code is needed, or if the user's intent is to chat with you.
+        "file":"vscode.path/to/file", //the file's path, using VSCode's URI format,
+        "changes":[
+          {
+            "text": "Your code here",
+            "line": 0, // The line number where the code should be inserted/edited
+          }
+        ]
+    ], // If the user's intent is to generate, fix or explain code. Empty if any more code is needed, or if the user's intent is to chat with you.
 
     "additional_info":{
       "keywords": ["keyword1", "keyword2", "keyword3"]
