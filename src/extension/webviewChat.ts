@@ -32,6 +32,8 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
           if(response)
           {
             webviewView.webview.postMessage({type: 'response', value: response});
+          }else{
+            webviewView.webview.postMessage({type: 'error'});
           }
           break;
         case 'requesting-history':
