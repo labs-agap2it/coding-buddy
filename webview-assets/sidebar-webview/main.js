@@ -74,18 +74,20 @@ window.addEventListener('message', event =>{
             addNewChatBox(message.value, true);
         break;
         case 'response':
-            processLLMResponse(message.value);
+            processLLMResponse(vscode,message.value);
             toggleLoader();
             document.getElementById('message-box').disabled = false;
         break;
         case 'history':
             let messages = message.value;
-            if(messages.length === 0){
+            if(messages === undefined){
                 return;
             }
             messages.forEach(element =>{
                 addNewChatBox(element.userMessage, true);
-                if(element.llmResponse.chat){
+                if(element.llmResponse.intent === "generate" || element.llmResponse.intent === "fix"){
+                    createChangeBox(vscode, element.llmResponse.explanation, element.llmResponse.code[0].file, element.llmResponse.code[0].hasPendingChanges, element.llmResponse.code[0].wasAccepted, element.llmResponse.code[0].changeID);
+                }else if(element.llmResponse.chat){
                     addNewChatBox(element.llmResponse.chat, false);
                 }else{
                     addNewChatBox(element.llmResponse.explanation, false);
@@ -112,14 +114,116 @@ window.addEventListener('message', event =>{
 });
 }());
 
-function processLLMResponse(response){
-    if(response.chat){
-        addNewChatBox(response.chat, false);
-    }else if(response.explanation){
-        addNewChatBox(response.explanation, false);
-    }else if(response.additional_info_needed){
-        showNeededInfo(response.additional_info_needed);
+function processLLMResponse(vscode, response){
+    if(response.intent === 'fix' || response.intent === 'generate'){
+        if(response.explanation){
+            createChangeBox(vscode, response.explanation, response.code[0].file, response.code[0].hasPendingChanges, response.code[0].wasAccepted, response.code[0].changeID);
+        }else if(response.additional_info_needed){
+            showNeededInfo(response.additional_info_needed);
+        }
+    }else{
+        if(response.chat){
+            addNewChatBox(response.chat, false);
+        }else if(response.explanation){
+            addNewChatBox(response.explanation, false);
+        }
     }
+}
+
+function createChangeBox(vscode,message, filePath, pending, wasAccepted, changeID){
+    //main container
+    let changeBox = document.createElement('div');
+    changeBox.className = 'message-chat-box chat-bot';
+
+    //coding buddy's name
+    let name = document.createElement('b');
+    name.className = 'bot-name';
+    name.innerHTML = 'Coding Buddy';
+
+    //divider declaration
+    let divider1 = document.createElement('div');
+    divider1.className = 'divider';
+
+    let divider2 = divider1.cloneNode(true);
+    let divider3 = divider1.cloneNode(true);
+
+    //message displayed before the change explanation
+    let changeMessage = document.createElement('p');
+    changeMessage.innerHTML = "Here are your changes!";
+
+    //change explanation box
+    let explanationBox = document.createElement('div');
+    explanationBox.className = 'explanation-box';
+
+    //div for filename/image
+    let fileDiv = document.createElement('div');
+    fileDiv.className = 'file-name-container';
+
+    //image
+    let img = document.createElement('i');
+    img.classList.add('codicon','codicon-file');
+
+    //filename
+    let fileName = document.createElement('p');
+    fileName.innerHTML = filePath.split('/').pop() + ' ';
+
+    let state = document.createElement('p');
+    state.className = pending ? 'hidden' : 'state';
+    state.innerHTML = wasAccepted ? '- accepted' : '- declined';
+
+    //explanation about changed code
+    let explanation = document.createElement('p');
+    explanation.innerHTML = message;
+
+    //button container
+    let buttonContainer = document.createElement('div');
+    buttonContainer.className = 'button-container';
+
+    //accept and decline buttons
+    let acceptButton = document.createElement('button');
+    acceptButton.className = 'accept-button';
+    acceptButton.innerHTML = 'Accept';
+    acceptButton.onclick = acceptChanges(vscode,changeID);
+    let declineButton = document.createElement('button');
+    declineButton.className = 'decline-button';
+    declineButton.innerHTML = 'Decline';
+    declineButton.onclick = declineChanges(vscode,changeID);
+
+    changeBox.appendChild(name);
+    changeBox.appendChild(divider1);
+    changeBox.appendChild(changeMessage);
+
+    fileDiv.appendChild(img);
+    fileDiv.appendChild(fileName);
+    fileDiv.appendChild(state);
+
+    buttonContainer.appendChild(declineButton);
+    buttonContainer.appendChild(acceptButton);
+
+    explanationBox.appendChild(fileDiv);
+    explanationBox.appendChild(divider2);
+    explanationBox.appendChild(explanation);
+
+    if(pending){
+    explanationBox.appendChild(divider3);
+    explanationBox.appendChild(buttonContainer);
+    }
+    
+    changeBox.appendChild(explanationBox);
+
+    document.getElementById('chat-container').appendChild(changeBox);
+}
+
+function acceptChanges(vscode,changeID){
+    return function(){
+        vscode.postMessage({type: 'accept-changes', value: changeID});
+    };
+}
+
+function declineChanges(vscode,changeID){
+    return function(){
+        vscode.postMessage({type: 'decline-changes', value: changeID});
+    };
 }
 
 function showNeededInfo(info){
@@ -131,5 +235,7 @@ function showNeededInfo(info){
         wrapper.className = 'info-wrapper';
         let text = document.createElement('p');
         text.innerHTML = "Searching for '" + element.keyword + "' in your code...";
+        wrapper.appendChild(text);
+        infoContainer.appendChild(wrapper);
     });
 }

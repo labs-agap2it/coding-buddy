@@ -41,6 +41,22 @@ export function getChatIndex():number{
     let chatJSON:ChatData = getChatFile();
     return chatJSON.openedChat;
 }
+function verifyIntent(llmResponse:any):string{
+    let intent = llmResponse.intent;
+    if(intent === "generate" || intent === "fix"){
+        let code = llmResponse.code;
+        for(let i = 0; i < code.length; i++){
+            code[i].hasPendingChanges = true;
+            code[i].wasAccepted = false;
+        }
+
+        let response = llmResponse;
+        response.code = code;
+        return JSON.stringify(response);
+    }
+    return JSON.stringify(llmResponse);
+}
+
 
 export function deleteChat(){
     let chatJSON:ChatData = getChatFile();
@@ -80,8 +96,7 @@ export function saveChat(user:string, llm:string){
     if(chatJSON.chats[openedChat].messages.length >= savedSettings.getMaxSavedMessages()){
         chatJSON.chats[openedChat].messages.shift();
     }
-
-    chatJSON.chats[openedChat].messages.push({userMessage: user, llmResponse: llm});
+    chatJSON.chats[openedChat].messages.push({userMessage: user, llmResponse: JSON.parse(verifyIntent(llm))});
     fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
 }
 
@@ -100,3 +115,29 @@ export function changeChat(chatIndex:number):Chat{
     fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
     return chatJSON.chats[chatIndex];
 }
+
+export function handleChanges(changeID: any, accepted: boolean) {
+    let chatJSON:ChatData = getChatFile();
+    let openedChat = chatJSON.openedChat;
+    let chat = chatJSON.chats[openedChat];
+    let messages = chat.messages;
+    let message = messages[messages.length - 1];
+    let response = message.llmResponse as unknown as { code: any[], hasPendingChanges?: boolean }; // Update the type of response
+    let code = response.code;
+    for(let i = 0; i < code.length; i++){
+        if(code[i].changeID === changeID){
+            let change = code[i];
+            change.hasPendingChanges = false;
+            change.wasAccepted = accepted;
+            change.changeID = "";
+            code[i] = change;
+        }
+    }
+    message.llmResponse = response as unknown as string;
+    messages[messages.length - 1] = message;
+    chat.messages = messages;
+    chatJSON.chats[openedChat] = chat;
+    fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
+
+}
+
