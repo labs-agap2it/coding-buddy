@@ -2,12 +2,14 @@ import * as vscode from "vscode";
 import * as buddy from "../llm/connection";
 import * as savedSettings from "../settings/savedSettings";
 import * as chatHistory from "../chat/chatHistory";
-import { clear } from "console";
+import * as userEditor from "../editor/userEditor";
 
 export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "coding-buddy.buddyWebview";
 
   private _view?: vscode.WebviewView;
+
+  private codeArray: any[] = [];
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -26,11 +28,25 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
+        case 'accept-changes':
+          userEditor.acceptChanges(data.value, this.codeArray.find((e) => e.changeID === data.value).signature);
+          this.changeChat();
+        break;
+        case 'decline-changes':
+          userEditor.declineChanges(data.value, this.codeArray);
+          this.changeChat();
+        break;
         case 'user-prompt':
           let response = await buddy.getLLMJson(data.value);
-          console.log(response);
           if(response)
           {
+            if(response.intent === "generate" || response.intent === "fix"){
+              response.code.forEach(async (element:any)=> {
+                //element.changes.forEach((change:any)=> userEditor.insertSnippetsOnEditor(change));
+                this.codeArray.push(await userEditor.insertSnippetsOnEditor(element.changes, element.changeID));
+                userEditor.checkForUserInputOnEditor(this);
+              });
+            }
             webviewView.webview.postMessage({type: 'response', value: response});
           }else{
             webviewView.webview.postMessage({type: 'error'});
@@ -51,13 +67,15 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   }
 
   public clearChat(){
-    console.log(this._view);
     this._view?.webview.postMessage({type: 'clear-chat'});
   }
 
   public async sendMessage(value:string){
     this._view?.webview.postMessage({type: 'pallette-message', value: value});
     let response = await buddy.getLLMJson(value);
+    if(response.intent === "generate" || response.intent === "fix"){
+      response.code.forEach(async (element:any)=> this.codeArray.push( await userEditor.insertSnippetsOnEditor(element.changes, element.changeID)));
+    }
     this._view?.webview.postMessage({type: 'response', value: response});
     return response;
   }
@@ -80,7 +98,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     <html lang="en">
     <head>
       <meta charset="UTF-8">
-      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';style-src ${webview.cspSource}">
+      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https://*; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';style-src ${webview.cspSource}">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link href="${codiconsUri}" rel="stylesheet">
       <link href="${styleUri}" rel="stylesheet">

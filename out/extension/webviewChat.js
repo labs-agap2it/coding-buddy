@@ -28,10 +28,12 @@ const vscode = __importStar(require("vscode"));
 const buddy = __importStar(require("../llm/connection"));
 const savedSettings = __importStar(require("../settings/savedSettings"));
 const chatHistory = __importStar(require("../chat/chatHistory"));
+const userEditor = __importStar(require("../editor/userEditor"));
 class CodingBuddyViewProvider {
     _extensionUri;
     static viewType = "coding-buddy.buddyWebview";
     _view;
+    codeArray = [];
     constructor(_extensionUri) {
         this._extensionUri = _extensionUri;
     }
@@ -44,10 +46,24 @@ class CodingBuddyViewProvider {
         webviewView.webview.html = await this._getHtmlForWebview(webviewView.webview);
         webviewView.webview.onDidReceiveMessage(async (data) => {
             switch (data.type) {
+                case 'accept-changes':
+                    userEditor.acceptChanges(data.value, this.codeArray.find((e) => e.changeID === data.value).signature);
+                    this.changeChat();
+                    break;
+                case 'decline-changes':
+                    userEditor.declineChanges(data.value, this.codeArray);
+                    this.changeChat();
+                    break;
                 case 'user-prompt':
                     let response = await buddy.getLLMJson(data.value);
-                    console.log(response);
                     if (response) {
+                        if (response.intent === "generate" || response.intent === "fix") {
+                            response.code.forEach(async (element) => {
+                                //element.changes.forEach((change:any)=> userEditor.insertSnippetsOnEditor(change));
+                                this.codeArray.push(await userEditor.insertSnippetsOnEditor(element.changes, element.changeID));
+                                userEditor.checkForUserInputOnEditor(this);
+                            });
+                        }
                         webviewView.webview.postMessage({ type: 'response', value: response });
                     }
                     else {
@@ -67,12 +83,14 @@ class CodingBuddyViewProvider {
         });
     }
     clearChat() {
-        console.log(this._view);
         this._view?.webview.postMessage({ type: 'clear-chat' });
     }
     async sendMessage(value) {
         this._view?.webview.postMessage({ type: 'pallette-message', value: value });
         let response = await buddy.getLLMJson(value);
+        if (response.intent === "generate" || response.intent === "fix") {
+            response.code.forEach(async (element) => this.codeArray.push(await userEditor.insertSnippetsOnEditor(element.changes, element.changeID)));
+        }
         this._view?.webview.postMessage({ type: 'response', value: response });
         return response;
     }
@@ -91,7 +109,7 @@ class CodingBuddyViewProvider {
     <html lang="en">
     <head>
       <meta charset="UTF-8">
-      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';style-src ${webview.cspSource}">
+      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https://*; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';style-src ${webview.cspSource}">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link href="${codiconsUri}" rel="stylesheet">
       <link href="${styleUri}" rel="stylesheet">

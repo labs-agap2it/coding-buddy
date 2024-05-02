@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import * as savedSettings from '../settings/savedSettings';
-import * as editorUtils from '../utils/editorUtils';
+import * as editorUtils from '../editor/userEditor';
 import * as vscode from 'vscode';
 import * as chatHistory from '../chat/chatHistory';
 import { codeExamples, rulesets, jsonFormat } from "./directives";
@@ -49,7 +49,9 @@ export async function getLLMJson(message:string){
     });
     if(!completion.choices[0].message.content){ return;}
     let response = JSON.parse(completion.choices[0].message.content);
-
+    response.code.forEach((element:any) => {
+        element.changeID = Math.random().toString(36).substring(7);
+    });
     chatHistory.saveChat(message, response);
     return response;
 }

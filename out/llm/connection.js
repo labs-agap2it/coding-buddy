@@ -29,7 +29,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.testAPIKey = exports.getLLMJson = void 0;
 const openai_1 = __importDefault(require("openai"));
 const savedSettings = __importStar(require("../settings/savedSettings"));
-const editorUtils = __importStar(require("../utils/editorUtils"));
+const editorUtils = __importStar(require("../editor/userEditor"));
 const vscode = __importStar(require("vscode"));
 const chatHistory = __importStar(require("../chat/chatHistory"));
 const directives_1 = require("./directives");
@@ -79,6 +79,9 @@ async function getLLMJson(message) {
         return;
     }
     let response = JSON.parse(completion.choices[0].message.content);
+    response.code.forEach((element) => {
+        element.changeID = Math.random().toString(36).substring(7);
+    });
     chatHistory.saveChat(message, response);
     return response;
 }

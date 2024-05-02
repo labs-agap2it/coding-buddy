@@ -21,6 +21,10 @@ body {
     display:none !important;
 }
 
+.state{
+    color: var(--vscode-disabledForeground);
+}
+
 .info-container{
     display: flex;
     flex-direction: row;
@@ -77,10 +81,63 @@ b.bot-name{
 
 }
 
-.chat-code{
-    display:block;
-    border:1px solid var(--vscode-activityBar-activeBorder);
-    padding: 0.5rem !important;
+.explanation-box{
+    display:flex;
+    flex-direction:column;
+    background-color:var(--vscode-activityBar-background);
+    border-radius:15px;
+    padding:0.5rem;
+    margin-top:0.5rem;
+}
+
+.file-name-container{
+    display: flex;
+    flex-direction: row;
+    padding-bottom:0.5rem;
+    align-items:center;
+    gap: 0.25rem;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.5rem;
+}
+
+.accept-button {
+    border: 0;
+    height:auto;
+    padding:0.25rem 0.5rem;
+    background-color: var(--vscode-foreground);
+    appearance: none;
+    color: var(--vscode-activityBar-background);
+    border-radius: 5px;
+}
+
+button.decline-button {
+    border: 1px solid var(--vscode-foreground);
+    appearance: none;
+    border-radius: 5px;
+    background-color: var(--vscode-background);
+    color: var(--vscode-foreground);
+}
+
+.explanation-box p {
+    padding: 0.5rem;
+}   
+
+.file-name-container p{
+    padding:0!important;
+}
+
+.file-name-container i{
+    width:1rem;
+    height:1rem;
+    align-self:end;
+}
+
+.explanation-box .divider{
+    border-color: var(--vscode-activityBar-activeBorder)!important;
 }
 
 .divider{
