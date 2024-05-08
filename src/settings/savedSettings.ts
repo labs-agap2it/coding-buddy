@@ -22,3 +22,11 @@ export function getMaxSavedMessages():number{
     vscode.workspace.getConfiguration("codingBuddy").update("maxSavedMessages", maxSavedMessages, vscode.ConfigurationTarget.Global);
     return maxSavedMessages;
 }
+
+export function getModel() {
+    let model:string | undefined = vscode.workspace.getConfiguration("codingBuddy").get("model");
+    if(model === "" || model === undefined){
+        model = "gpt-3.5-turbo";
+    }
+    return model;
+}

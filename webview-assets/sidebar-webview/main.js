@@ -66,6 +66,17 @@ document.getElementById('message-box').addEventListener('keypress', (e)=>{
     }
 });
 
+window.addEventListener('keydown', (e)=>{
+    if(!document.querySelector('.button-container')){return;}
+    if(document.activeElement === document.querySelector('#message-box')){return;}
+    if(e.key === 'Y' || e.key === 'y'){
+        document.querySelector('.accept-button').click();
+    }else if(e.key === 'N' || e.key === 'n'){
+        document.querySelector('.decline-button').click();
+    }
+
+});
+
 window.addEventListener('message', event =>{
     const message = event.data;
     switch(message.type){
@@ -73,7 +84,7 @@ window.addEventListener('message', event =>{
             toggleLoader();
             addNewChatBox(message.value, true);
         break;
-        case 'response':
+        case 'llm-response':
             processLLMResponse(vscode,message.value);
             toggleLoader();
             document.getElementById('message-box').disabled = false;
@@ -85,16 +96,12 @@ window.addEventListener('message', event =>{
             }
             messages.forEach(element =>{
                 addNewChatBox(element.userMessage, true);
-                if(element.llmResponse.intent === "generate" || element.llmResponse.intent === "fix"){
-                    createChangeBox(vscode, element.llmResponse.explanation, element.llmResponse.code[0].file, element.llmResponse.code[0].hasPendingChanges, element.llmResponse.code[0].wasAccepted, element.llmResponse.code[0].changeID);
-                }else if(element.llmResponse.chat){
-                    addNewChatBox(element.llmResponse.chat, false);
-                }else{
-                    addNewChatBox(element.llmResponse.explanation, false);
-                }
+                processLLMResponse(vscode, element.llmResponse);
             });
             document.getElementById('message-box').focus();
-            
+            //scroll down
+            let container = document.getElementById('chat-container');
+            container.scrollTop = container.scrollHeight;
         break;
         case 'clear-chat':
             document.getElementById('chat-container').innerHTML = '';
@@ -102,6 +109,7 @@ window.addEventListener('message', event =>{
         case 'error':
             toggleLoader();
             document.getElementById('message-box').disabled = false;
+            console.log(message.value);
             addNewChatBox("There was an error processing your request. Please try again!", false);
         break;
         default:
@@ -116,8 +124,8 @@ window.addEventListener('message', event =>{
 
 function processLLMResponse(vscode, response){
     if(response.intent === 'fix' || response.intent === 'generate'){
-        if(response.explanation){
-            createChangeBox(vscode, response.explanation, response.code[0].file, response.code[0].hasPendingChanges, response.code[0].wasAccepted, response.code[0].changeID);
+        if(response.code){
+            createChangeBox(vscode, response.code[0].explanation, response.code[0].file, response.code[0].hasPendingChanges, response.code[0].wasAccepted, response.code[0].changeID);
         }else if(response.additional_info_needed){
             showNeededInfo(response.additional_info_needed);
         }
@@ -130,7 +138,8 @@ function processLLMResponse(vscode, response){
     }
 }
 
-function createChangeBox(vscode,message, filePath, pending, wasAccepted, changeID){
+function createChangeBox(vscode, message, filePath, pending, wasAccepted, changeID){
+    let code = [];
     //main container
     let changeBox = document.createElement('div');
     changeBox.className = 'message-chat-box chat-bot';
