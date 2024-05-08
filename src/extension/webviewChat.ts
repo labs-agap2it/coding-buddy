@@ -1,15 +1,16 @@
 import * as vscode from "vscode";
 import * as buddy from "../llm/connection";
 import * as savedSettings from "../settings/savedSettings";
-import * as chatHistory from "../chat/chatHistory";
+import * as chatHistory from "../tempManagement/chatHistory";
 import * as userEditor from "../editor/userEditor";
+import * as codeHistory from "../tempManagement/codeHistory";
 
 export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "coding-buddy.buddyWebview";
 
   private _view?: vscode.WebviewView;
 
-  private codeArray: any[] = [];
+  private codeArray: any[] = codeHistory.getCodeHistory();
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -20,77 +21,125 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   ) {
     this._view = webviewView;
     webviewView.webview.options = {
-        enableScripts: true,
-        localResourceRoots: [this._extensionUri]
+      enableScripts: true,
+      localResourceRoots: [this._extensionUri],
     };
 
-    webviewView.webview.html = await this._getHtmlForWebview(webviewView.webview);
+    webviewView.webview.html = await this._getHtmlForWebview(
+      webviewView.webview
+    );
 
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
-        case 'accept-changes':
-          userEditor.acceptChanges(data.value, this.codeArray.find((e) => e.changeID === data.value).signature);
+        case "accept-changes":
+          userEditor.handleChangesOnEditor(
+            data.value, //changeID
+            true, //wasAccepted
+            this.codeArray //codeArray
+          );
           this.changeChat();
-        break;
-        case 'decline-changes':
-          userEditor.declineChanges(data.value, this.codeArray);
+          break;
+        case "decline-changes":
+          userEditor.handleChangesOnEditor(
+            data.value, //changeID
+            false, //wasAccepted
+            this.codeArray //codeArray
+          );
           this.changeChat();
-        break;
-        case 'user-prompt':
-          let response = await buddy.getLLMJson(data.value);
-          if(response)
-          {
-            if(response.intent === "generate" || response.intent === "fix"){
-              response.code.forEach(async (element:any)=> {
-                //element.changes.forEach((change:any)=> userEditor.insertSnippetsOnEditor(change));
-                this.codeArray.push(await userEditor.insertSnippetsOnEditor(element.changes, element.changeID));
-                userEditor.checkForUserInputOnEditor(this);
+          break;
+        case "user-prompt":
+          try {
+            let response = await buddy.getLLMJson(data.value);
+            if (response) {
+              if (response.intent === "generate" || response.intent === "fix") {
+                console.log(response);
+                response.code.forEach(async (element: any) =>
+                  {
+                  await userEditor.insertSnippetsOnEditor(element.changes, element.changeID, vscode.Uri.parse(element.file));
+                  this.codeArray = codeHistory.getCodeHistory();
+                  userEditor.checkForUserInputOnEditor(this, element.changeID, this.codeArray);
+                });
+              }
+              webviewView.webview.postMessage({
+                type: "llm-response",
+                value: response,
               });
+            } else {
+              webviewView.webview.postMessage({ type: "error",value: "No response from API" });
             }
-            webviewView.webview.postMessage({type: 'response', value: response});
-          }else{
-            webviewView.webview.postMessage({type: 'error'});
+          } catch (e) {
+            webviewView.webview.postMessage({ type: "error", value: e});
           }
           break;
-        case 'requesting-history':
+        case "requesting-history":
           let validateApiKey = savedSettings.getAPIKey();
-          if(!validateApiKey){
-            webviewView.webview.postMessage({type: 'no-api-key'});
+          if (!validateApiKey) {
+            webviewView.webview.postMessage({ type: "no-api-key" });
             return;
           }
-          
+
           let history = chatHistory.getOpenedChat();
-          webviewView.webview.postMessage({type: 'history', value: history});
+          webviewView.webview.postMessage({ type: "history", value: history });
           break;
       }
     });
   }
 
-  public clearChat(){
-    this._view?.webview.postMessage({type: 'clear-chat'});
+  public clearChat() {
+    this._view?.webview.postMessage({ type: "clear-chat" });
   }
 
-  public async sendMessage(value:string){
-    this._view?.webview.postMessage({type: 'pallette-message', value: value});
+  public async sendMessage(value: string) {
+    this._view?.webview.postMessage({ type: "pallette-message", value: value });
     let response = await buddy.getLLMJson(value);
-    if(response.intent === "generate" || response.intent === "fix"){
-      response.code.forEach(async (element:any)=> this.codeArray.push( await userEditor.insertSnippetsOnEditor(element.changes, element.changeID)));
+    if (response.intent === "generate" || response.intent === "fix") {
+      response.code.forEach(async (element: any) =>
+        {
+        await userEditor.insertSnippetsOnEditor(element.changes, element.changeID, vscode.Uri.parse(element.file));
+        this.codeArray = codeHistory.getCodeHistory();
+      });
     }
-    this._view?.webview.postMessage({type: 'response', value: response});
+    this._view?.webview.postMessage({ type: "response", value: response });
     return response;
   }
 
-  public changeChat(){
-    this._view?.webview.postMessage({type: 'clear-chat'});
+  public changeChat() {
+    this._view?.webview.postMessage({ type: "clear-chat" });
     let history = chatHistory.getOpenedChat();
-    this._view?.webview.postMessage({type: 'history', value: history});
+    this._view?.webview.postMessage({ type: "history", value: history });
   }
 
   async _getHtmlForWebview(webview: vscode.Webview) {
-    const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'webview-assets/sidebar-webview', 'sidebar-chat.css'));
-    const htmlUri = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(this._extensionUri, 'webview-assets/sidebar-webview', 'chat.html'));
-    const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'webview-assets/sidebar-webview', 'main.js'));
-		const codiconsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'node_modules', '@vscode/codicons', 'dist', 'codicon.css'));
+    const styleUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        "webview-assets/sidebar-webview",
+        "sidebar-chat.css"
+      )
+    );
+    const htmlUri = await vscode.workspace.fs.readFile(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        "webview-assets/sidebar-webview",
+        "chat.html"
+      )
+    );
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        "webview-assets/sidebar-webview",
+        "main.js"
+      )
+    );
+    const codiconsUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        "node_modules",
+        "@vscode/codicons",
+        "dist",
+        "codicon.css"
+      )
+    );
 
     const nonce = getNonce();
 
@@ -110,13 +159,15 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     </body>
     </html>`;
     return header + htmlUri.toString() + scriptLoad;
+  }
 }
-}
+
 function getNonce() {
-	let text = '';
-	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	for (let i = 0; i < 32; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
+  let text = "";
+  const possible =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }

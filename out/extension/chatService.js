@@ -25,7 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteChat = exports.changeChat = exports.openNewChat = void 0;
 const vscode = __importStar(require("vscode"));
-const chatHistory = __importStar(require("../chat/chatHistory"));
+const chatHistory = __importStar(require("../tempManagement/chatHistory"));
 function openNewChat(webview) {
     chatHistory.createNewChat();
     webview.clearChat();

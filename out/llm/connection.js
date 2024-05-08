@@ -31,19 +31,22 @@ const openai_1 = __importDefault(require("openai"));
 const savedSettings = __importStar(require("../settings/savedSettings"));
 const editorUtils = __importStar(require("../editor/userEditor"));
 const vscode = __importStar(require("vscode"));
-const chatHistory = __importStar(require("../chat/chatHistory"));
+const chatHistory = __importStar(require("../tempManagement/chatHistory"));
 const directives_1 = require("./directives");
 const openai = new openai_1.default();
 async function getLLMJson(message) {
     let apiKey = savedSettings.getAPIKey();
+    let userModel = savedSettings.getModel();
     if (!apiKey || apiKey === undefined) {
         return;
     }
     openai.apiKey = apiKey;
     let messageHistory = JSON.stringify(chatHistory.getOpenedChat());
     const completion = await openai.chat.completions.create({
-        model: "gpt-4-1106-preview",
-        response_format: { "type": "json_object" },
+        model: userModel,
+        response_format: {
+            "type": "json_object"
+        },
         top_p: 0.4,
         messages: [
             {

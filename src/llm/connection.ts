@@ -2,19 +2,22 @@ import OpenAI from 'openai';
 import * as savedSettings from '../settings/savedSettings';
 import * as editorUtils from '../editor/userEditor';
 import * as vscode from 'vscode';
-import * as chatHistory from '../chat/chatHistory';
+import * as chatHistory from '../tempManagement/chatHistory';
 import { codeExamples, rulesets, jsonFormat } from "./directives";
 
 const openai = new OpenAI();
 
 export async function getLLMJson(message:string){
     let apiKey = savedSettings.getAPIKey();
+    let userModel = savedSettings.getModel();
     if(!apiKey || apiKey === undefined ){ return; }
     openai.apiKey = apiKey;
     let messageHistory = JSON.stringify(chatHistory.getOpenedChat());
     const completion = await openai.chat.completions.create({
-        model: "gpt-4-1106-preview",
-        response_format:{"type":"json_object"},
+        model: userModel,
+        response_format:{
+            "type":"json_object"
+        },
         top_p:0.4,
         messages: [
             {
@@ -79,4 +82,4 @@ export async function testAPIKey(apiKey: string){
         isValid = false;
     }
     return isValid;
-}
+}   

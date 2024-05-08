@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as chatHistory from '../chat/chatHistory';
+import * as chatHistory from '../tempManagement/chatHistory';
 import * as webview from '../extension/webviewChat';
 
 export function openNewChat(webview:webview.CodingBuddyViewProvider){

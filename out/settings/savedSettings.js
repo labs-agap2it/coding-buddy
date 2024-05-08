@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMaxSavedMessages = exports.getAPIKey = void 0;
+exports.getModel = exports.getMaxSavedMessages = exports.getAPIKey = void 0;
 const vscode = __importStar(require("vscode"));
 function getAPIKey() {
     let apiKey = vscode.workspace.getConfiguration("codingBuddy").get("apiKey");
@@ -49,4 +49,12 @@ function getMaxSavedMessages() {
     return maxSavedMessages;
 }
 exports.getMaxSavedMessages = getMaxSavedMessages;
+function getModel() {
+    let model = vscode.workspace.getConfiguration("codingBuddy").get("model");
+    if (model === "" || model === undefined) {
+        model = "gpt-3.5-turbo";
+    }
+    return model;
+}
+exports.getModel = getModel;
 //# sourceMappingURL=savedSettings.js.map

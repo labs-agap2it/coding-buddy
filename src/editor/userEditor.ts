@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import * as chatHistory from '../chat/chatHistory';
+import * as chatHistory from '../tempManagement/chatHistory';
+import * as codeHistory from '../tempManagement/codeHistory';
 
 export function getUserCode():string{
     let code = vscode.window.activeTextEditor?.document.getText() || "";
@@ -16,58 +17,94 @@ export function getUserCode():string{
     ### CODE END`;
 }
 
-export async function insertSnippetsOnEditor(changeList: ChatData[], changeID: string){
+var highlightDecoration: vscode.TextEditorDecorationType;
+
+export async function insertSnippetsOnEditor(changeList: ChatData[], changeID: string, file:vscode.Uri){
     let editor = vscode.window.activeTextEditor;
-    if(!editor){
-        return;
+
+    if(!editor || editor.document.uri.toString() !== file.toString()){
+        let document = await vscode.workspace.openTextDocument(file);
+        editor = await vscode.window.showTextDocument(document);
     }
-    //insert snippet
+
+    highlightDecoration  = vscode.window.createTextEditorDecorationType({
+        light:{
+            backgroundColor: 'lightgreen'
+        },
+        dark:{
+            backgroundColor: 'green'
+        }
+    });
+
     let previousCode = editor.document.getText();
+    let decorationList: vscode.DecorationOptions[] = [];
     for(let i = 0; i < changeList.length; i++){
         let change = changeList[i];
         let start = new vscode.Position(change.lines.start -1 , 0);
         let end = new vscode.Position(change.lines.end -1 , 0);
+        let hoverText = "";
         if(change.isSingleLine){
-            end = new vscode.Position(change.lines.start - 1, previousCode.split(/\r\n|\r|\n/)[change.lines.start - 1].length);
+            if(previousCode.split(/\r\n|\r|\n/).length < change.lines.start){
+                end = new vscode.Position(change.lines.end -1, 0);
+            }else{
+                end = new vscode.Position(change.lines.start - 1, previousCode.split(/\r\n|\r|\n/)[change.lines.start - 1].length);
+            }
         }
         let range = new vscode.Range(start, end);
+        hoverText = "Replaced : ´" + editor.document.getText(range) + "´";
         await editor.edit((editBuilder)=>{
             if(change.willReplaceCode){
                 editBuilder.delete(range);
             }
-            editBuilder.insert(start, change.text + change.signature);
+            if(change.lines.start > previousCode.split(/\r\n|\r|\n/).length){
+                for(let i = previousCode.split(/\r\n|\r|\n/).length; i < change.lines.start; i++){
+                    editBuilder.insert(new vscode.Position(i, 0), "\n");
+                }
+                hoverText = "Inserted " + (change.lines.start - previousCode.split(/\r\n|\r|\n/).length)  + " new lines";
+            }
+            editBuilder.insert(start, change.text);
+            //update "end" position
         });
+        end = new vscode.Position(start.line + change.text.split(/\r\n|\r|\n/).length - 1, change.text.split(/\r\n|\r|\n/)[change.text.split(/\r\n|\r|\n/).length - 1].length);
+        range = new vscode.Range(start, end);
+        decorationList.push({range: range, hoverMessage: hoverText});
     };
+    editor.setDecorations(highlightDecoration, decorationList);
 
     let response = {
         code: previousCode,
         changeID: changeID,
-        signature: changeList[0].signature
+        signature: changeList[0].signature,
+        filePath: file.toString()
     };
-    return response;
-    //store code temporarily
+    console.log(response);
+    codeHistory.saveCodeHistory(response);
 }
 
-export async function checkForUserInputOnEditor(webview: any){
+export async function checkForUserInputOnEditor(webview: any, changeID:string, codeArray:any[]){
+    let file = codeArray.find((element:any)=> element.changeID === changeID).filePath;
     let userCode = vscode.window.activeTextEditor?.document.getText();
     let newCode = vscode.window.activeTextEditor?.document.getText()!;
     while(newCode === userCode){
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            newCode = vscode.window.activeTextEditor?.document.getText()!;
+            await new Promise(resolve => setTimeout(resolve, 250));
+            if(vscode.window.activeTextEditor?.document.uri.toString() === file.toString()){
+                newCode = vscode.window.activeTextEditor?.document.getText()!;
+            }
     }
-    verifyChangeOnWebview(webview);
+    console.log("changes was made");
+    console.log(newCode);
+    verifyChangeOnWebview(webview, changeID);
 }
 
-function verifyChangeOnWebview(webview:any){
+function verifyChangeOnWebview(webview:any, changeID:string){
     let openedChat = chatHistory.getOpenedChat();
     if(!openedChat || openedChat.length === 0){
         return;
     }
     let lastMessage = openedChat[openedChat.length - 1];
     let llmResponse = lastMessage.llmResponse as unknown as { code: any[]};
-    if(llmResponse.code[0].hasPendingChanges){
-        // accept changes without modifying code
-        chatHistory.handleChanges(llmResponse.code[0].changeID, true);
+    if(llmResponse.code[0].hasPendingChanges){  
+        chatHistory.handleChanges(changeID, true);
         webview.changeChat();
     }
 }
@@ -80,35 +117,35 @@ interface ChatData{
     signature: string
 }
 
-export function acceptChanges(changeID: any, signature: string) {
+export function handleChangesOnEditor(changeID: any, wasAccepted: boolean, codeArray: any[]) {
     let editor = vscode.window.activeTextEditor;
     if(!editor){
         return;
     }
 
-    //remove "coding buddy" comments
-    let previousCode = editor.document.getText();
-    previousCode = previousCode.replaceAll(signature, "");
-
-    //insert new code
-    editor.edit((editBuilder)=>{
-        editBuilder.replace(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(editor.document.lineCount, 0)), previousCode);
-    });
-
-    chatHistory.handleChanges(changeID, true);
-}
-export function declineChanges(changeID: any, codeArray: any[]) {
-    let editor = vscode.window.activeTextEditor;
-    if(!editor){
-        return;
-    }
-
-    //restore old code from array
+    console.log(codeArray);
+    console.log(changeID);
     let changeIndex = codeArray.findIndex((element:any)=> element.changeID === changeID);
-    let previousCode = codeArray[changeIndex].code;
+
+    console.log(codeArray[changeIndex]);
+
+    if(codeArray[changeIndex].filePath.toString() !== editor.document.uri.toString()){
+        vscode.workspace.openTextDocument(codeArray[changeIndex].filePath).then((document)=>{
+            vscode.window.showTextDocument(document);
+        });
+    }
+    let editorCode = editor.document.getText();
+    if(!wasAccepted){
+        if(!codeArray){return;}
+        let changeIndex = codeArray.findIndex((element:any)=> element.changeID === changeID);
+        editorCode = codeArray[changeIndex].code;
+    }
+    highlightDecoration.dispose();
     editor.edit((editBuilder)=>{
-        editBuilder.replace(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(editor.document.lineCount, 0)), previousCode);
+        editBuilder.replace(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(editor.document.lineCount, 0)), editorCode);
     });
 
-    chatHistory.handleChanges(changeID, false);
+    codeHistory.deleteCodeHistory(changeID);
+
+    chatHistory.handleChanges(changeID, wasAccepted);
 }

@@ -105,6 +105,7 @@ export const jsonFormat =`
     "chat":"Your response here" // If the user's intent is to chat with you. Empty if the user's intent isn't to chat with you. This output needs to be in html format. You shouldn't include a "p" tag in the response.
     "code":[
         "file":"vscode.path/to/file", //the file's path, using VSCode's URI format. You will always receive the file's path on the user's code, specified as ### FILE URI: vscode.path/to/file ###
+        "explanation": "", //an explanation of the code you're providing. This output needs to be in html format. 
         "changes":[
           {
             "text": "Your code here",
@@ -120,7 +121,7 @@ export const jsonFormat =`
       "keywords": ["keyword1", "keyword2", "keyword3"]
       "language_declarations": ["function", "class", "variable"]
     },// If you need more information that isn't provided in the code. Empty if no additional information is needed.
-    "explanation": "Your explanation here", // If the user needs an explanation of the code, or if you have provided code. Empty if the user's intent isn't related to code. This output needs to be in html format.
+    "explanation": "Your explanation here", //If the user's intent is to explain code. This is used only for old code that the user has sent you.
     "intent": "Your intent here" // The user's intent. This can be "generate", "fix", "explain" or "chat". Please only use these values.
   }
   ---JSON End
