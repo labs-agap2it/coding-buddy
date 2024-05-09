@@ -36,7 +36,7 @@ export async function insertSnippetsOnEditor(changeList: ChatData[], changeID: s
         }
     });
 
-    let previousCode = editor.document.getText();
+    let previousCode = editor.document.getText().split(/\r\n|\r|\n/);
     let decorationList: vscode.DecorationOptions[] = [];
     for(let i = 0; i < changeList.length; i++){
         let change = changeList[i];
@@ -44,10 +44,10 @@ export async function insertSnippetsOnEditor(changeList: ChatData[], changeID: s
         let end = new vscode.Position(change.lines.end -1 , 0);
         let hoverText = "";
         if(change.isSingleLine){
-            if(previousCode.split(/\r\n|\r|\n/).length < change.lines.start){
+            if(previousCode.length < change.lines.start){
                 end = new vscode.Position(change.lines.end -1, 0);
             }else{
-                end = new vscode.Position(change.lines.start - 1, previousCode.split(/\r\n|\r|\n/)[change.lines.start - 1].length);
+                end = new vscode.Position(change.lines.start - 1, previousCode[change.lines.start - 1].length);
             }
         }
         let range = new vscode.Range(start, end);
@@ -56,11 +56,11 @@ export async function insertSnippetsOnEditor(changeList: ChatData[], changeID: s
             if(change.willReplaceCode){
                 editBuilder.delete(range);
             }
-            if(change.lines.start > previousCode.split(/\r\n|\r|\n/).length){
-                for(let i = previousCode.split(/\r\n|\r|\n/).length; i < change.lines.start; i++){
+            if(change.lines.start > previousCode.length){
+                for(let i = previousCode.length; i < change.lines.start; i++){
                     editBuilder.insert(new vscode.Position(i, 0), "\n");
                 }
-                hoverText = "Inserted " + (change.lines.start - previousCode.split(/\r\n|\r|\n/).length)  + " new lines";
+                hoverText = "Inserted " + (change.lines.start - previousCode.length)  + " new lines";
             }
             editBuilder.insert(start, change.text);
             //update "end" position
@@ -85,7 +85,7 @@ export async function checkForUserInputOnEditor(webview: any, changeID:string, c
     let file = codeArray.find((element:any)=> element.changeID === changeID).filePath;
     let userCode = vscode.window.activeTextEditor?.document.getText();
     let newCode = vscode.window.activeTextEditor?.document.getText()!;
-    while(newCode === userCode){
+    while(newCode === userCode){ // TODO isto pode ser um ciclo infinito caso o utilizador feche o documento. Garantir que o ciclo quebra nesse caso. Considerar também outras alternativas para quebrar o ciclo.
             await new Promise(resolve => setTimeout(resolve, 250));
             if(vscode.window.activeTextEditor?.document.uri.toString() === file.toString()){
                 newCode = vscode.window.activeTextEditor?.document.getText()!;
@@ -98,9 +98,8 @@ export async function checkForUserInputOnEditor(webview: any, changeID:string, c
 
 function verifyChangeOnWebview(webview:any, changeID:string){
     let openedChat = chatHistory.getOpenedChat();
-    if(!openedChat || openedChat.length === 0){
-        return;
-    }
+    if(!openedChat || openedChat.length === 0) return;
+    
     let lastMessage = openedChat[openedChat.length - 1];
     let llmResponse = lastMessage.llmResponse as unknown as { code: any[]};
     if(llmResponse.code[0].hasPendingChanges){  
@@ -119,9 +118,8 @@ interface ChatData{
 
 export function handleChangesOnEditor(changeID: any, wasAccepted: boolean, codeArray: any[]) {
     let editor = vscode.window.activeTextEditor;
-    if(!editor){
-        return;
-    }
+    if(!editor) return;
+
 
     console.log(codeArray);
     console.log(changeID);
@@ -136,7 +134,8 @@ export function handleChangesOnEditor(changeID: any, wasAccepted: boolean, codeA
     }
     let editorCode = editor.document.getText();
     if(!wasAccepted){
-        if(!codeArray){return;}
+        if(!codeArray) return;
+
         let changeIndex = codeArray.findIndex((element:any)=> element.changeID === changeID);
         editorCode = codeArray[changeIndex].code;
     }

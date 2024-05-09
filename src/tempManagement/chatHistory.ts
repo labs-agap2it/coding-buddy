@@ -20,6 +20,7 @@ interface Message{
 function getChatFile():ChatData{
     let chatJSON:ChatData;
     try{
+        //TODO evitar magic strings, colocar no início do ficheiro
         chatJSON = JSON.parse(fs.readFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json').toString());
     }catch(e){
         chatJSON = createChatFile();  
@@ -41,7 +42,7 @@ export function getChatIndex():number{
     let chatJSON:ChatData = getChatFile();
     return chatJSON.openedChat;
 }
-function verifyIntent(llmResponse:any):string{
+function verifyIntent(llmResponse:any):string{ //TODO renomear para algo que explique melhor o seu objetivo ou propósito
     let intent = llmResponse.intent;
     if(intent === "generate" || intent === "fix"){
         let code = llmResponse.code;
@@ -54,7 +55,7 @@ function verifyIntent(llmResponse:any):string{
         response.code = code;
         return JSON.stringify(response);
     }
-    return JSON.stringify(llmResponse);
+    return JSON.stringify(llmResponse); // TODO evitar devolver em string tendo em conta que fazes parse logo a seguir a teres chamado
 }
 
 
@@ -116,6 +117,7 @@ export function changeChat(chatIndex:number):Chat{
     return chatJSON.chats[chatIndex];
 }
 
+//TODO considerar separar funções de plumbing de mensagens para disco e disco para mensagens de outras funções com lógica de negócio
 export function handleChanges(changeID: any, accepted: boolean) {
     let chatJSON:ChatData = getChatFile();
     let openedChat = chatJSON.openedChat;
@@ -123,14 +125,14 @@ export function handleChanges(changeID: any, accepted: boolean) {
     let messages = chat.messages;
     let message = messages[messages.length - 1];
     let response = message.llmResponse as unknown as { code: any[], hasPendingChanges?: boolean }; // Update the type of response
-    let code = response.code;
-    for(let i = 0; i < code.length; i++){
-        if(code[i].changeID === changeID){
-            let change = code[i];
+    let codeItems = response.code;
+    for(let i = 0; i < codeItems.length; i++){
+        if(codeItems[i].changeID === changeID){
+            let change = codeItems[i];
             change.hasPendingChanges = false;
             change.wasAccepted = accepted;
             change.changeID = "";
-            code[i] = change;
+            codeItems[i] = change;
         }
     }
     message.llmResponse = response as unknown as string;

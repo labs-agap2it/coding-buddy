@@ -10,9 +10,10 @@ const openai = new OpenAI();
 export async function getLLMJson(message:string){
     let apiKey = savedSettings.getAPIKey();
     let userModel = savedSettings.getModel();
-    if(!apiKey || apiKey === undefined ){ return; }
+    if(!apiKey || apiKey === undefined ){ return; } //TODO talvez fosse melhor devolveres uma estruturazinha, do tipo { status:"success/error", content:<conteúdo> }
     openai.apiKey = apiKey;
     let messageHistory = JSON.stringify(chatHistory.getOpenedChat());
+    //TODO em vez de passar o objeto logo, chamar uma função que o constroi devidamente, e retorna como parâmetro
     const completion = await openai.chat.completions.create({
         model: userModel,
         response_format:{
@@ -32,6 +33,7 @@ export async function getLLMJson(message:string){
                 role: "system",
                 content: codeExamples //Respose examples fed into Coding Buddy
             },
+            //TODO: em vez da estrutura infra, deves inserir aqui uma lista de jsons (não me string) onde cada estrutura tem o formato { role:"user", content:<conteúdo> }, {role:"assistant", content:<conteúdo>}
             {
                 role: "system",
                 content: 
@@ -50,12 +52,12 @@ export async function getLLMJson(message:string){
             }
         ]
     });
-    if(!completion.choices[0].message.content){ return;}
+    if(!completion.choices[0].message.content){ return;} //TODO talvez fosse melhor devolveres uma estruturazinha, do tipo { status:"success/error", content:<conteúdo> }
     let response = JSON.parse(completion.choices[0].message.content);
     response.code.forEach((element:any) => {
-        element.changeID = Math.random().toString(36).substring(7);
+        element.changeID = Math.random().toString(36).substring(7); // TODO refatorizar para uma funçãozinha
     });
-    chatHistory.saveChat(message, response);
+    chatHistory.saveChat(message, response); //TODO isto não devia estar aqui mas numa camada acima
     return response;
 }
 
