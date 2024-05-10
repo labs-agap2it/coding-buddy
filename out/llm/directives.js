@@ -118,10 +118,12 @@ exports.jsonFormat = `
         ]
     ], // If the user's intent is to generate, fix or explain code. Empty if any more code is needed, or if the user's intent is to chat with you.
 
-    "additional_info":{
-      "keywords": ["keyword1", "keyword2", "keyword3"]
-      "language_declarations": ["function", "class", "variable"]
-    },// If you need more information that isn't provided in the code. Empty if no additional information is needed.
+    "additional_info":[
+        {
+            "possiblePath": "file://path/in/vscode.Uri/format", // If you find a path in the code, you can use this to simplify the extension's work. Empty if no path is found.
+            "keywords": ["keywordNeeded1", "keywordNeeded2"] //The keywords needed to search on the user's solution. You should provide the keyword as it is declared in the code (function keyword, interface keyword, etc etc)
+        }
+    ],// If you need more information that isn't provided in the code. Empty if no additional information is needed.
     "explanation": "Your explanation here", //If the user's intent is to explain code. This is used only for old code that the user has sent you.
     "intent": "Your intent here" // The user's intent. This can be "generate", "fix", "explain" or "chat". Please only use these values.
   }

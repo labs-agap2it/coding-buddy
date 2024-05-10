@@ -57,51 +57,60 @@ async function insertSnippetsOnEditor(changeList, changeID, file) {
         }
     });
     let previousCode = editor.document.getText();
+    let previousCodeArray = previousCode.split(/\r\n|\r|\n/);
     let decorationList = [];
     for (let i = 0; i < changeList.length; i++) {
-        let change = changeList[i];
-        let start = new vscode.Position(change.lines.start - 1, 0);
-        let end = new vscode.Position(change.lines.end - 1, 0);
-        let hoverText = "";
-        if (change.isSingleLine) {
-            if (previousCode.split(/\r\n|\r|\n/).length < change.lines.start) {
-                end = new vscode.Position(change.lines.end - 1, 0);
-            }
-            else {
-                end = new vscode.Position(change.lines.start - 1, previousCode.split(/\r\n|\r|\n/)[change.lines.start - 1].length);
-            }
-        }
-        let range = new vscode.Range(start, end);
-        hoverText = "Replaced : ´" + editor.document.getText(range) + "´";
-        await editor.edit((editBuilder) => {
-            if (change.willReplaceCode) {
-                editBuilder.delete(range);
-            }
-            if (change.lines.start > previousCode.split(/\r\n|\r|\n/).length) {
-                for (let i = previousCode.split(/\r\n|\r|\n/).length; i < change.lines.start; i++) {
-                    editBuilder.insert(new vscode.Position(i, 0), "\n");
-                }
-                hoverText = "Inserted " + (change.lines.start - previousCode.split(/\r\n|\r|\n/).length) + " new lines";
-            }
-            editBuilder.insert(start, change.text);
-            //update "end" position
-        });
-        end = new vscode.Position(start.line + change.text.split(/\r\n|\r|\n/).length - 1, change.text.split(/\r\n|\r|\n/)[change.text.split(/\r\n|\r|\n/).length - 1].length);
-        range = new vscode.Range(start, end);
-        decorationList.push({ range: range, hoverMessage: hoverText });
+        let decorationRange = await changeTextOnEditor(changeList[i], editor, previousCodeArray);
+        decorationList.push(showDecorationsOnEditor(decorationRange, changeList[i], previousCodeArray));
     }
     ;
     editor.setDecorations(highlightDecoration, decorationList);
     let response = {
         code: previousCode,
         changeID: changeID,
-        signature: changeList[0].signature,
         filePath: file.toString()
     };
-    console.log(response);
     codeHistory.saveCodeHistory(response);
 }
 exports.insertSnippetsOnEditor = insertSnippetsOnEditor;
+async function changeTextOnEditor(change, editor, previousCodeArray) {
+    let start = new vscode.Position(change.lines.start - 1, 0);
+    let end = new vscode.Position(change.lines.end - 1, 0);
+    if (change.isSingleLine) {
+        if (previousCodeArray.length < change.lines.start) {
+            end = new vscode.Position(change.lines.end - 1, 0);
+        }
+        else {
+            end = new vscode.Position(change.lines.start - 1, previousCodeArray[change.lines.start - 1].length);
+        }
+    }
+    let range = new vscode.Range(start, end);
+    await editor.edit((editBuilder) => {
+        if (change.willReplaceCode) {
+            editBuilder.delete(range);
+        }
+        if (change.lines.start > previousCodeArray.length) {
+            for (let i = previousCodeArray.length; i < change.lines.start; i++) {
+                editBuilder.insert(new vscode.Position(i, 0), "\n");
+            }
+        }
+        editBuilder.insert(start, change.text);
+    });
+    let changeArray = change.text.split(/\r\n|\r|\n/);
+    end = new vscode.Position(start.line + changeArray.length - 1, changeArray[changeArray.length - 1].length);
+    range = new vscode.Range(start, end);
+    return range;
+}
+function showDecorationsOnEditor(range, change, previousCodeArray) {
+    let hoverText = "";
+    if (change.willReplaceCode) {
+        hoverText = 'Replaced: ' + previousCodeArray[change.lines.start - 1];
+    }
+    else {
+        hoverText = 'Inserted: ' + change.text;
+    }
+    return { range: range, hoverMessage: hoverText };
+}
 async function checkForUserInputOnEditor(webview, changeID, codeArray) {
     let file = codeArray.find((element) => element.changeID === changeID).filePath;
     let userCode = vscode.window.activeTextEditor?.document.getText();

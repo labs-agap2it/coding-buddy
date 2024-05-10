@@ -71,7 +71,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
             webviewView.webview.postMessage({ type: "error", value: e});
           }
           break;
-        case "requesting-history":
+          case "requesting-history":
           let validateApiKey = savedSettings.getAPIKey();
           if (!validateApiKey) {
             webviewView.webview.postMessage({ type: "no-api-key" });

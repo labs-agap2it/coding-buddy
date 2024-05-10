@@ -23,60 +23,52 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleChanges = exports.changeChat = exports.createNewChat = exports.saveChat = exports.getChatList = exports.getOpenedChat = exports.deleteChat = exports.getChatIndex = void 0;
+exports.handleChanges = exports.changeChat = exports.createNewChat = exports.getChatList = exports.getOpenedChat = exports.getChatIndex = exports.saveChat = exports.deleteChat = void 0;
 const fs = __importStar(require("fs"));
 const os = __importStar(require("os"));
 const savedSettings = __importStar(require("../settings/savedSettings"));
+let chatFilePath = os.tmpdir() + '\\CodingBuddy\\chatHistory.json';
 function getChatFile() {
     let chatJSON;
     try {
-        chatJSON = JSON.parse(fs.readFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json').toString());
+        chatJSON = JSON.parse(fs.readFileSync(chatFilePath).toString());
     }
     catch (e) {
         chatJSON = createChatFile();
     }
     return chatJSON;
 }
-function createChatFile() {
-    let chatJSON = {
-        openedChat: 0,
-        chats: []
-    };
-    fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
-    return chatJSON;
-}
-function getChatIndex() {
-    let chatJSON = getChatFile();
-    return chatJSON.openedChat;
-}
-exports.getChatIndex = getChatIndex;
-function verifyIntent(llmResponse) {
-    let intent = llmResponse.intent;
-    if (intent === "generate" || intent === "fix") {
-        let code = llmResponse.code;
-        for (let i = 0; i < code.length; i++) {
-            code[i].hasPendingChanges = true;
-            code[i].wasAccepted = false;
-        }
-        let response = llmResponse;
-        response.code = code;
-        return JSON.stringify(response);
-    }
-    return JSON.stringify(llmResponse);
-}
 function deleteChat() {
     let chatJSON = getChatFile();
     if (chatJSON.chats.length <= 1) {
         chatJSON.chats = [];
         chatJSON.openedChat = 0;
-        fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
+        fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
         return;
     }
     chatJSON.chats.splice(chatJSON.openedChat, 1);
     chatJSON.openedChat = chatJSON.chats.length - 1;
-    fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
+    fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
 }
 exports.deleteChat = deleteChat;
+function saveChat(user, llm) {
+    let chatJSON = getChatFile();
+    let openedChat = chatJSON.openedChat;
+    if (chatJSON.chats[openedChat] === undefined) {
+        chatJSON.chats[openedChat] = { title: "Chat " + openedChat + 1, messages: [] };
+    }
+    if (chatJSON.chats[openedChat].messages.length >= savedSettings.getMaxSavedMessages()) {
+        chatJSON.chats[openedChat].messages.shift();
+    }
+    chatJSON.chats[openedChat].messages.push({ userMessage: user, llmResponse: createModificationStateOnLlmMessage(llm) });
+    fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
+}
+exports.saveChat = saveChat;
+function getChatIndex() {
+    let chatJSON = getChatFile();
+    return chatJSON.openedChat;
+}
+exports.getChatIndex = getChatIndex;
 function getOpenedChat() {
     let chatJSON = getChatFile();
     if (chatJSON.chats[chatJSON.openedChat] === undefined) {
@@ -90,56 +82,62 @@ function getChatList() {
     return chatJSON.chats;
 }
 exports.getChatList = getChatList;
-function saveChat(user, llm) {
-    let chatJSON = getChatFile();
-    let openedChat = chatJSON.openedChat;
-    if (chatJSON.chats[openedChat] === undefined) {
-        chatJSON.chats[openedChat] = { title: "Chat " + openedChat + 1, messages: [] };
-    }
-    if (chatJSON.chats[openedChat].messages.length >= savedSettings.getMaxSavedMessages()) {
-        chatJSON.chats[openedChat].messages.shift();
-    }
-    chatJSON.chats[openedChat].messages.push({ userMessage: user, llmResponse: JSON.parse(verifyIntent(llm)) });
-    fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
-}
-exports.saveChat = saveChat;
 function createNewChat() {
     let chatJSON = getChatFile();
     chatJSON.openedChat = chatJSON.chats.length;
     chatJSON.chats.push({ title: "Chat " + (chatJSON.chats.length + 1), messages: [] });
-    fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
+    fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
     return chatJSON.chats[chatJSON.openedChat];
 }
 exports.createNewChat = createNewChat;
 function changeChat(chatIndex) {
     let chatJSON = getChatFile();
     chatJSON.openedChat = chatIndex;
-    fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
+    fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
     return chatJSON.chats[chatIndex];
 }
 exports.changeChat = changeChat;
-function handleChanges(changeID, accepted) {
-    let chatJSON = getChatFile();
-    let openedChat = chatJSON.openedChat;
-    let chat = chatJSON.chats[openedChat];
-    let messages = chat.messages;
-    let message = messages[messages.length - 1];
-    let response = message.llmResponse; // Update the type of response
-    let code = response.code;
-    for (let i = 0; i < code.length; i++) {
-        if (code[i].changeID === changeID) {
-            let change = code[i];
-            change.hasPendingChanges = false;
-            change.wasAccepted = accepted;
-            change.changeID = "";
-            code[i] = change;
+function handleChanges(changeID, wasAccepted) {
+    let llmCode = getOpenedChatCode();
+    for (let i = 0; i < llmCode.length; i++) {
+        if (llmCode[i].changeID === changeID) {
+            llmCode[i].hasPendingChanges = false;
+            llmCode[i].wasAccepted = wasAccepted;
+            llmCode[i].changeID = "";
         }
     }
-    message.llmResponse = response;
-    messages[messages.length - 1] = message;
-    chat.messages = messages;
-    chatJSON.chats[openedChat] = chat;
-    fs.writeFileSync(os.tmpdir() + '\\CodingBuddy\\chatHistory.json', JSON.stringify(chatJSON));
+    modifyChatCode(llmCode);
 }
 exports.handleChanges = handleChanges;
+function getOpenedChatCode() {
+    let chatJSON = getChatFile();
+    return chatJSON.chats[chatJSON.openedChat].messages[chatJSON.chats[chatJSON.openedChat].messages.length - 1].llmResponse.code;
+}
+function modifyChatCode(llmCode) {
+    let chatJSON = getChatFile();
+    chatJSON.chats[chatJSON.openedChat].messages[chatJSON.chats[chatJSON.openedChat].messages.length - 1].llmResponse.code = llmCode;
+    fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
+}
+function createChatFile() {
+    let chatJSON = {
+        openedChat: 0,
+        chats: []
+    };
+    fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
+    return chatJSON;
+}
+function createModificationStateOnLlmMessage(llmResponse) {
+    let intent = llmResponse.intent;
+    if (intent === "generate" || intent === "fix") {
+        let code = llmResponse.code;
+        for (let i = 0; i < code.length; i++) {
+            code[i].hasPendingChanges = true;
+            code[i].wasAccepted = false;
+        }
+        let response = llmResponse;
+        response.code = code;
+        return response;
+    }
+    return llmResponse;
+}
 //# sourceMappingURL=chatHistory.js.map
