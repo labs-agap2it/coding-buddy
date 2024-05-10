@@ -115,7 +115,7 @@ async function checkForUserInputOnEditor(webview, changeID, codeArray) {
     let file = codeArray.find((element) => element.changeID === changeID).filePath;
     let userCode = vscode.window.activeTextEditor?.document.getText();
     let newCode = vscode.window.activeTextEditor?.document.getText();
-    while (newCode === userCode) {
+    while (newCode === userCode) { // TODO isto pode ser um ciclo infinito caso o utilizador feche o documento. Garantir que o ciclo quebra nesse caso. Considerar também outras alternativas para quebrar o ciclo.
         await new Promise(resolve => setTimeout(resolve, 250));
         if (vscode.window.activeTextEditor?.document.uri.toString() === file.toString()) {
             newCode = vscode.window.activeTextEditor?.document.getText();
