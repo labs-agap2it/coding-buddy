@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as chatHistory from '../tempManagement/chatHistory';
 import * as codeHistory from '../tempManagement/codeHistory';
+import { llmChange } from '../model/llmResponse';
 
 export function getUserCode():string{
     let code = vscode.window.activeTextEditor?.document.getText() || "";
@@ -19,7 +20,7 @@ export function getUserCode():string{
 
 var highlightDecoration: vscode.TextEditorDecorationType;
 
-export async function insertSnippetsOnEditor(changeList: ChatData[], changeID: string, file:vscode.Uri){
+export async function insertSnippetsOnEditor(changeList: llmChange[], changeID: string, file:vscode.Uri){
     let editor = vscode.window.activeTextEditor;
 
     if(!editor || editor.document.uri.toString() !== file.toString()){
@@ -37,48 +38,63 @@ export async function insertSnippetsOnEditor(changeList: ChatData[], changeID: s
     });
 
     let previousCode = editor.document.getText();
+    let previousCodeArray = previousCode.split(/\r\n|\r|\n/);
     let decorationList: vscode.DecorationOptions[] = [];
+
+
     for(let i = 0; i < changeList.length; i++){
-        let change = changeList[i];
-        let start = new vscode.Position(change.lines.start -1 , 0);
-        let end = new vscode.Position(change.lines.end -1 , 0);
-        let hoverText = "";
-        if(change.isSingleLine){
-            if(previousCode.split(/\r\n|\r|\n/).length < change.lines.start){
-                end = new vscode.Position(change.lines.end -1, 0);
-            }else{
-                end = new vscode.Position(change.lines.start - 1, previousCode.split(/\r\n|\r|\n/)[change.lines.start - 1].length);
-            }
-        }
-        let range = new vscode.Range(start, end);
-        hoverText = "Replaced : ´" + editor.document.getText(range) + "´";
-        await editor.edit((editBuilder)=>{
-            if(change.willReplaceCode){
-                editBuilder.delete(range);
-            }
-            if(change.lines.start > previousCode.split(/\r\n|\r|\n/).length){
-                for(let i = previousCode.split(/\r\n|\r|\n/).length; i < change.lines.start; i++){
-                    editBuilder.insert(new vscode.Position(i, 0), "\n");
-                }
-                hoverText = "Inserted " + (change.lines.start - previousCode.split(/\r\n|\r|\n/).length)  + " new lines";
-            }
-            editBuilder.insert(start, change.text);
-            //update "end" position
-        });
-        end = new vscode.Position(start.line + change.text.split(/\r\n|\r|\n/).length - 1, change.text.split(/\r\n|\r|\n/)[change.text.split(/\r\n|\r|\n/).length - 1].length);
-        range = new vscode.Range(start, end);
-        decorationList.push({range: range, hoverMessage: hoverText});
+        let decorationRange = await changeTextOnEditor(changeList[i], editor, previousCodeArray);
+        decorationList.push(showDecorationsOnEditor(decorationRange, changeList[i], previousCodeArray));
     };
     editor.setDecorations(highlightDecoration, decorationList);
 
     let response = {
         code: previousCode,
         changeID: changeID,
-        signature: changeList[0].signature,
         filePath: file.toString()
     };
-    console.log(response);
     codeHistory.saveCodeHistory(response);
+}
+
+async function changeTextOnEditor(change:llmChange, editor:vscode.TextEditor, previousCodeArray:string[]):Promise<vscode.Range>{
+    let start = new vscode.Position(change.lines.start -1 , 0);
+    let end = new vscode.Position(change.lines.end -1 , 0);
+
+    if(change.isSingleLine){
+        if(previousCodeArray.length < change.lines.start){
+            end = new vscode.Position(change.lines.end -1, 0);
+        }else{
+            end = new vscode.Position(change.lines.start - 1, previousCodeArray[change.lines.start - 1].length);
+        }
+    }
+    
+    let range = new vscode.Range(start, end);
+    await editor.edit((editBuilder)=>{
+        if(change.willReplaceCode){
+            editBuilder.delete(range);
+        }
+        if(change.lines.start > previousCodeArray.length){
+            for(let i = previousCodeArray.length; i < change.lines.start; i++){
+                editBuilder.insert(new vscode.Position(i, 0), "\n");
+            }
+        }
+        editBuilder.insert(start, change.text);
+    });
+    let changeArray = change.text.split(/\r\n|\r|\n/);
+    end = new vscode.Position(start.line + changeArray.length - 1, changeArray[changeArray.length - 1].length);
+    range = new vscode.Range(start, end);
+
+    return range;
+}
+
+function showDecorationsOnEditor(range:vscode.Range, change:llmChange, previousCodeArray:string[]):vscode.DecorationOptions{
+    let hoverText = "";
+    if(change.willReplaceCode){
+        hoverText = 'Replaced: ' + previousCodeArray[change.lines.start - 1];
+    }else{
+        hoverText = 'Inserted: ' + change.text;
+    }
+    return {range: range, hoverMessage: hoverText};
 }
 
 export async function checkForUserInputOnEditor(webview: any, changeID:string, codeArray:any[]){
@@ -107,14 +123,6 @@ function verifyChangeOnWebview(webview:any, changeID:string){
         chatHistory.handleChanges(changeID, true);
         webview.changeChat();
     }
-}
-
-interface ChatData{
-    text:string, 
-    lines: {start:number, end:number},
-    isSingleLine: boolean,
-    willReplaceCode: boolean,
-    signature: string
 }
 
 export function handleChangesOnEditor(changeID: any, wasAccepted: boolean, codeArray: any[]) {
