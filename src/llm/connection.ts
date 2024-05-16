@@ -1,68 +1,40 @@
 import OpenAI from 'openai';
 import * as savedSettings from '../settings/savedSettings';
-import * as editorUtils from '../editor/userEditor';
 import * as vscode from 'vscode';
 import * as chatHistory from '../tempManagement/chatHistory';
-import { codeExamples, rulesets, jsonFormat } from "./directives";
+import { buildMessages } from "./requestBuilder";
+import { llmMessage, llmResponse, llmStatusEnum } from '../model/llmResponse';
 
 const openai = new OpenAI();
 
-export async function getLLMJson(message:string){
+export async function getLLMJson(message:string):Promise<llmMessage>{
     let apiKey = savedSettings.getAPIKey();
     let userModel = savedSettings.getModel();
-    if(!apiKey || apiKey === undefined ){ return; } //TODO talvez fosse melhor devolveres uma estruturazinha, do tipo { status:"success/error", content:<conteúdo> }
+    if(!apiKey || apiKey === undefined ){ return {status: llmStatusEnum.noApiKey}; }
     openai.apiKey = apiKey;
-    let messageHistory = JSON.stringify(chatHistory.getOpenedChat());
-    //TODO em vez de passar o objeto logo, chamar uma função que o constroi devidamente, e retorna como parâmetro
+    let llmMessages = await buildMessages(message);
     const completion = await openai.chat.completions.create({
         model: userModel,
         response_format:{
             "type":"json_object"
         },
         top_p:0.4,
-        messages: [
-            {
-                role: "system",
-                content: rulesets //Coding Buddy's Directives
-            },
-            {
-                role: "system",
-                content: jsonFormat //Coding Buddy's Response Format
-            },
-            {
-                role: "system",
-                content: codeExamples //Respose examples fed into Coding Buddy
-            },
-            //TODO: em vez da estrutura infra, deves inserir aqui uma lista de jsons (não me string) onde cada estrutura tem o formato { role:"user", content:<conteúdo> }, {role:"assistant", content:<conteúdo>}
-            {
-                role: "system",
-                content: 
-                `##HISTORY START
-                ${messageHistory}
-                ##HISTORY END
-                ` //Last messages exchanged between the user and Coding Buddy. The amount is to be set by the user.
-            },
-            {
-                role: "system",
-                content:editorUtils.getUserCode() //User's code
-            },
-            {
-                role: "user",
-                content:message //The user's request
-            }
-        ]
+        messages: llmMessages
     });
-    if(!completion.choices[0].message.content){ return;} //TODO talvez fosse melhor devolveres uma estruturazinha, do tipo { status:"success/error", content:<conteúdo> }
-    let response = JSON.parse(completion.choices[0].message.content);
-    response.code.forEach((element:any) => {
-        element.changeID = Math.random().toString(36).substring(7); // TODO refatorizar para uma funçãozinha
-    });
-    chatHistory.saveChat(message, response); //TODO isto não devia estar aqui mas numa camada acima
-    return response;
+    if(!completion.choices[0].message.content){ return {status: llmStatusEnum.noResponse};}
+    let response:llmResponse = JSON.parse(completion.choices[0].message.content);
+    for (let i = 0; i < response.code.length; i++) {
+        response.code[i].changeID = generateChangeID();
+    }
+    chatHistory.saveChat(message, response);
+    return { status: llmStatusEnum.success, content:response };
+}
+
+function generateChangeID(){
+    return Math.random().toString(36).substring(7);
 }
 
 export async function testAPIKey(apiKey: string){
-
     openai.apiKey = apiKey;
     let isValid = false;
     try{

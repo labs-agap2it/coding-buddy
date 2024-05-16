@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleChanges = exports.changeChat = exports.createNewChat = exports.getChatList = exports.getOpenedChat = exports.getChatIndex = exports.saveChat = exports.deleteChat = void 0;
+exports.getPendingChanges = exports.handleChanges = exports.changeChat = exports.createNewChat = exports.getChatList = exports.getOpenedChat = exports.getChatIndex = exports.saveChat = exports.deleteChat = void 0;
 const fs = __importStar(require("fs"));
 const os = __importStar(require("os"));
 const savedSettings = __importStar(require("../settings/savedSettings"));
@@ -140,4 +140,18 @@ function createModificationStateOnLlmMessage(llmResponse) {
     }
     return llmResponse;
 }
+function getPendingChanges() {
+    let openedChat = getOpenedChat();
+    if (!openedChat || openedChat.length === 0) {
+        return [];
+    }
+    let pendingChanges = [];
+    for (let i = 0; i < openedChat.length; i++) {
+        if (openedChat[i].llmResponse.code[0].hasPendingChanges) {
+            pendingChanges.push(openedChat[i].llmResponse.code[0]);
+        }
+    }
+    return pendingChanges;
+}
+exports.getPendingChanges = getPendingChanges;
 //# sourceMappingURL=chatHistory.js.map

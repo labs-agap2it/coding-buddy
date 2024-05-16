@@ -30,6 +30,7 @@ const savedSettings = __importStar(require("../settings/savedSettings"));
 const chatHistory = __importStar(require("../tempManagement/chatHistory"));
 const userEditor = __importStar(require("../editor/userEditor"));
 const codeHistory = __importStar(require("../tempManagement/codeHistory"));
+const llmResponse_1 = require("../model/llmResponse");
 class CodingBuddyViewProvider {
     _extensionUri;
     static viewType = "coding-buddy.buddyWebview";
@@ -37,6 +38,32 @@ class CodingBuddyViewProvider {
     codeArray = codeHistory.getCodeHistory();
     constructor(_extensionUri) {
         this._extensionUri = _extensionUri;
+    }
+    async handleUserRequestToLLM(message) {
+        let response = await buddy.getLLMJson(message);
+        if (response.status === llmResponse_1.llmStatusEnum.success) {
+            let content = response.content;
+            if (content.intent === "generate" || content.intent === "fix") {
+                this.handleChangesOnEditor(content);
+            }
+            this._view?.webview.postMessage({ type: "llm-response", value: content });
+        }
+        else if (response.status === llmResponse_1.llmStatusEnum.noApiKey) {
+            let apiKey = savedSettings.getAPIKey();
+            if (!apiKey || apiKey === undefined) {
+                this._view?.webview.postMessage({ type: "no-api-key" });
+            }
+        }
+        else if (response.status === llmResponse_1.llmStatusEnum.noResponse) {
+            this._view?.webview.postMessage({ type: "no-response" });
+        }
+    }
+    async handleChangesOnEditor(response) {
+        response.code.forEach(async (element) => {
+            await userEditor.insertSnippetsOnEditor(element.changes, element.changeID, vscode.Uri.parse(element.file));
+            this.codeArray = codeHistory.getCodeHistory();
+            userEditor.checkForUserInputOnEditor(this, element.changeID, this.codeArray);
+        });
     }
     async resolveWebviewView(webviewView, context, token) {
         this._view = webviewView;
@@ -62,29 +89,7 @@ class CodingBuddyViewProvider {
                     this.changeChat();
                     break;
                 case "user-prompt":
-                    try {
-                        let response = await buddy.getLLMJson(data.value);
-                        if (response) {
-                            if (response.intent === "generate" || response.intent === "fix") {
-                                console.log(response);
-                                response.code.forEach(async (element) => {
-                                    await userEditor.insertSnippetsOnEditor(element.changes, element.changeID, vscode.Uri.parse(element.file));
-                                    this.codeArray = codeHistory.getCodeHistory();
-                                    userEditor.checkForUserInputOnEditor(this, element.changeID, this.codeArray);
-                                });
-                            }
-                            webviewView.webview.postMessage({
-                                type: "llm-response",
-                                value: response,
-                            });
-                        }
-                        else {
-                            webviewView.webview.postMessage({ type: "error", value: "No response from API" });
-                        }
-                    }
-                    catch (e) {
-                        webviewView.webview.postMessage({ type: "error", value: e });
-                    }
+                    this.handleUserRequestToLLM(data.value);
                     break;
                 case "requesting-history":
                     let validateApiKey = savedSettings.getAPIKey();
@@ -94,24 +99,39 @@ class CodingBuddyViewProvider {
                     }
                     let history = chatHistory.getOpenedChat();
                     webviewView.webview.postMessage({ type: "history", value: history });
+                    if (history) {
+                        this.restorePreviousSession(history);
+                    }
                     break;
             }
         });
+    }
+    async restorePreviousSession(history) {
+        for (let i = 0; i < history.length; i++) {
+            if (history[i].llmResponse.code) {
+                for (let j = 0; j < history[i].llmResponse.code.length; j++) {
+                    if (history[i].llmResponse.code[j].hasPendingChanges) {
+                        let llmCode = history[i].llmResponse.code[j];
+                        let changeID = history[i].llmResponse.code[j].changeID;
+                        let userOldCodeArray = codeHistory.getCodeHistory();
+                        let userOldCode = userOldCodeArray.find((element) => element.changeID === changeID);
+                        await userEditor.replaceCodeOnEditor(userOldCode.code, userOldCode.filePath);
+                        if (userOldCodeArray.length > 0) {
+                            await userEditor.insertSnippetsOnEditor(llmCode.changes, changeID, vscode.Uri.parse(userOldCode.filePath));
+                            this.codeArray = codeHistory.getCodeHistory();
+                            userEditor.checkForUserInputOnEditor(this, changeID, this.codeArray);
+                        }
+                    }
+                }
+            }
+        }
     }
     clearChat() {
         this._view?.webview.postMessage({ type: "clear-chat" });
     }
     async sendMessage(value) {
         this._view?.webview.postMessage({ type: "pallette-message", value: value });
-        let response = await buddy.getLLMJson(value);
-        if (response.intent === "generate" || response.intent === "fix") {
-            response.code.forEach(async (element) => {
-                await userEditor.insertSnippetsOnEditor(element.changes, element.changeID, vscode.Uri.parse(element.file));
-                this.codeArray = codeHistory.getCodeHistory();
-            });
-        }
-        this._view?.webview.postMessage({ type: "response", value: response });
-        return response;
+        await this.handleUserRequestToLLM(value);
     }
     changeChat() {
         this._view?.webview.postMessage({ type: "clear-chat" });

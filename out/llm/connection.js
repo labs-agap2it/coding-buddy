@@ -29,68 +29,41 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.testAPIKey = exports.getLLMJson = void 0;
 const openai_1 = __importDefault(require("openai"));
 const savedSettings = __importStar(require("../settings/savedSettings"));
-const editorUtils = __importStar(require("../editor/userEditor"));
 const vscode = __importStar(require("vscode"));
 const chatHistory = __importStar(require("../tempManagement/chatHistory"));
-const directives_1 = require("./directives");
+const requestBuilder_1 = require("./requestBuilder");
+const llmResponse_1 = require("../model/llmResponse");
 const openai = new openai_1.default();
 async function getLLMJson(message) {
     let apiKey = savedSettings.getAPIKey();
     let userModel = savedSettings.getModel();
     if (!apiKey || apiKey === undefined) {
-        return;
-    } //TODO talvez fosse melhor devolveres uma estruturazinha, do tipo { status:"success/error", content:<conteúdo> }
+        return { status: llmResponse_1.llmStatusEnum.noApiKey };
+    }
     openai.apiKey = apiKey;
-    let messageHistory = JSON.stringify(chatHistory.getOpenedChat());
-    //TODO em vez de passar o objeto logo, chamar uma função que o constroi devidamente, e retorna como parâmetro
+    let llmMessages = await (0, requestBuilder_1.buildMessages)(message);
     const completion = await openai.chat.completions.create({
         model: userModel,
         response_format: {
             "type": "json_object"
         },
         top_p: 0.4,
-        messages: [
-            {
-                role: "system",
-                content: directives_1.rulesets //Coding Buddy's Directives
-            },
-            {
-                role: "system",
-                content: directives_1.jsonFormat //Coding Buddy's Response Format
-            },
-            {
-                role: "system",
-                content: directives_1.codeExamples //Respose examples fed into Coding Buddy
-            },
-            //TODO: em vez da estrutura infra, deves inserir aqui uma lista de jsons (não me string) onde cada estrutura tem o formato { role:"user", content:<conteúdo> }, {role:"assistant", content:<conteúdo>}
-            {
-                role: "system",
-                content: `##HISTORY START
-                ${messageHistory}
-                ##HISTORY END
-                ` //Last messages exchanged between the user and Coding Buddy. The amount is to be set by the user.
-            },
-            {
-                role: "system",
-                content: editorUtils.getUserCode() //User's code
-            },
-            {
-                role: "user",
-                content: message //The user's request
-            }
-        ]
+        messages: llmMessages
     });
     if (!completion.choices[0].message.content) {
-        return;
-    } //TODO talvez fosse melhor devolveres uma estruturazinha, do tipo { status:"success/error", content:<conteúdo> }
+        return { status: llmResponse_1.llmStatusEnum.noResponse };
+    }
     let response = JSON.parse(completion.choices[0].message.content);
-    response.code.forEach((element) => {
-        element.changeID = Math.random().toString(36).substring(7); // TODO refatorizar para uma funçãozinha
-    });
-    chatHistory.saveChat(message, response); //TODO isto não devia estar aqui mas numa camada acima
-    return response;
+    for (let i = 0; i < response.code.length; i++) {
+        response.code[i].changeID = generateChangeID();
+    }
+    chatHistory.saveChat(message, response);
+    return { status: llmResponse_1.llmStatusEnum.success, content: response };
 }
 exports.getLLMJson = getLLMJson;
+function generateChangeID() {
+    return Math.random().toString(36).substring(7);
+}
 async function testAPIKey(apiKey) {
     openai.apiKey = apiKey;
     let isValid = false;

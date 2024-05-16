@@ -26,7 +26,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCodeHistory = exports.getCodeHistory = exports.saveCodeHistory = void 0;
 const fs = __importStar(require("fs"));
 const os = __importStar(require("os"));
-//TODO tendo em conta que armazenas isto separadamente do histórico de mensagens, é preciso saber como o sistema funciona quando o user não faz nem accept nem reject de uma alterção, e simplesmente pede uma nova
 function saveCodeHistory(codeHistory) {
     let oldCodeHistory = getCodeHistory();
     oldCodeHistory.push(codeHistory);

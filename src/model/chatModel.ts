@@ -1,4 +1,4 @@
-import { llmResponse} from './llmResponse';
+import { llmResponse } from './llmResponse';
 export interface ChatData{
     openedChat: number,
     chats: Chat[]

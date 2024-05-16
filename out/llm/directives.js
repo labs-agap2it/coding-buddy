@@ -117,7 +117,6 @@ exports.jsonFormat = `
           }// this is supposed to be a snippet, so you can have multiple changes without returning the whole code to the user.
         ]
     ], // If the user's intent is to generate, fix or explain code. Empty if any more code is needed, or if the user's intent is to chat with you.
-
     "additional_info":[
         {
             "possiblePath": "file://path/in/vscode.Uri/format", // If you find a path in the code, you can use this to simplify the extension's work. Empty if no path is found.

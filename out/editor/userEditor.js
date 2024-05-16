@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleChangesOnEditor = exports.checkForUserInputOnEditor = exports.insertSnippetsOnEditor = exports.getUserCode = void 0;
+exports.replaceCodeOnEditor = exports.handleChangesOnEditor = exports.checkForUserInputOnEditor = exports.insertSnippetsOnEditor = exports.getUserCode = void 0;
 const vscode = __importStar(require("vscode"));
 const chatHistory = __importStar(require("../tempManagement/chatHistory"));
 const codeHistory = __importStar(require("../tempManagement/codeHistory"));
@@ -48,14 +48,7 @@ async function insertSnippetsOnEditor(changeList, changeID, file) {
         let document = await vscode.workspace.openTextDocument(file);
         editor = await vscode.window.showTextDocument(document);
     }
-    highlightDecoration = vscode.window.createTextEditorDecorationType({
-        light: {
-            backgroundColor: 'lightgreen'
-        },
-        dark: {
-            backgroundColor: 'green'
-        }
-    });
+    highlightDecoration = defineHighlightDecoration();
     let previousCode = editor.document.getText();
     let previousCodeArray = previousCode.split(/\r\n|\r|\n/);
     let decorationList = [];
@@ -73,6 +66,16 @@ async function insertSnippetsOnEditor(changeList, changeID, file) {
     codeHistory.saveCodeHistory(response);
 }
 exports.insertSnippetsOnEditor = insertSnippetsOnEditor;
+function defineHighlightDecoration() {
+    return vscode.window.createTextEditorDecorationType({
+        light: {
+            backgroundColor: 'lightgreen'
+        },
+        dark: {
+            backgroundColor: 'green'
+        }
+    });
+}
 async function changeTextOnEditor(change, editor, previousCodeArray) {
     let start = new vscode.Position(change.lines.start - 1, 0);
     let end = new vscode.Position(change.lines.end - 1, 0);
@@ -115,14 +118,12 @@ async function checkForUserInputOnEditor(webview, changeID, codeArray) {
     let file = codeArray.find((element) => element.changeID === changeID).filePath;
     let userCode = vscode.window.activeTextEditor?.document.getText();
     let newCode = vscode.window.activeTextEditor?.document.getText();
-    while (newCode === userCode) { // TODO isto pode ser um ciclo infinito caso o utilizador feche o documento. Garantir que o ciclo quebra nesse caso. Considerar também outras alternativas para quebrar o ciclo.
+    while (newCode === userCode) {
         await new Promise(resolve => setTimeout(resolve, 250));
         if (vscode.window.activeTextEditor?.document.uri.toString() === file.toString()) {
             newCode = vscode.window.activeTextEditor?.document.getText();
         }
     }
-    console.log("changes was made");
-    console.log(newCode);
     verifyChangeOnWebview(webview, changeID);
 }
 exports.checkForUserInputOnEditor = checkForUserInputOnEditor;
@@ -143,14 +144,12 @@ function handleChangesOnEditor(changeID, wasAccepted, codeArray) {
     if (!editor) {
         return;
     }
-    console.log(codeArray);
-    console.log(changeID);
     let changeIndex = codeArray.findIndex((element) => element.changeID === changeID);
-    console.log(codeArray[changeIndex]);
     if (codeArray[changeIndex].filePath.toString() !== editor.document.uri.toString()) {
         vscode.workspace.openTextDocument(codeArray[changeIndex].filePath).then((document) => {
             vscode.window.showTextDocument(document);
         });
+        editor = vscode.window.activeTextEditor;
     }
     let editorCode = editor.document.getText();
     if (!wasAccepted) {
@@ -160,12 +159,21 @@ function handleChangesOnEditor(changeID, wasAccepted, codeArray) {
         let changeIndex = codeArray.findIndex((element) => element.changeID === changeID);
         editorCode = codeArray[changeIndex].code;
     }
+    replaceCodeOnEditor(editorCode, codeArray[changeIndex].filePath);
     highlightDecoration.dispose();
-    editor.edit((editBuilder) => {
-        editBuilder.replace(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(editor.document.lineCount, 0)), editorCode);
-    });
     codeHistory.deleteCodeHistory(changeID);
     chatHistory.handleChanges(changeID, wasAccepted);
 }
 exports.handleChangesOnEditor = handleChangesOnEditor;
+async function replaceCodeOnEditor(editorCode, filePath) {
+    let editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.uri.toString() !== filePath.toString()) {
+        let document = await vscode.workspace.openTextDocument(filePath);
+        editor = await vscode.window.showTextDocument(document);
+    }
+    await editor.edit((editBuilder) => {
+        editBuilder.replace(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(editor.document.lineCount, 0)), editorCode);
+    });
+}
+exports.replaceCodeOnEditor = replaceCodeOnEditor;
 //# sourceMappingURL=userEditor.js.map
