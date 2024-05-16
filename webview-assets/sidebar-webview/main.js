@@ -32,7 +32,6 @@ function addNewChatBox(message, isUser){
     divider.className = 'divider';
     let messageBox = document.createElement('p');
     messageBox.innerHTML = message;
-
     chatBox.appendChild(name);
     chatBox.appendChild(divider);
     chatBox.appendChild(messageBox);
@@ -83,11 +82,11 @@ window.addEventListener('message', event =>{
         case 'pallette-message':
             toggleLoader();
             addNewChatBox(message.value, true);
+            document.getElementById('message-box').disabled = true;
         break;
         case 'llm-response':
             processLLMResponse(vscode,message.value);
             toggleLoader();
-            document.getElementById('message-box').disabled = false;
         break;
         case 'history':
             let messages = message.value;
@@ -98,10 +97,11 @@ window.addEventListener('message', event =>{
                 addNewChatBox(element.userMessage, true);
                 processLLMResponse(vscode, element.llmResponse);
             });
-            document.getElementById('message-box').focus();
-            //scroll down
             let container = document.getElementById('chat-container');
             container.scrollTop = container.scrollHeight;
+            if(document.querySelector('.button-container')){
+                document.getElementById('message-box').disabled = true;
+            }
         break;
         case 'clear-chat':
             document.getElementById('chat-container').innerHTML = '';
@@ -109,7 +109,6 @@ window.addEventListener('message', event =>{
         case 'error':
             toggleLoader();
             document.getElementById('message-box').disabled = false;
-            console.log(message.value);
             addNewChatBox("There was an error processing your request. Please try again!", false);
         break;
         default:
@@ -135,6 +134,7 @@ function processLLMResponse(vscode, response){
         }else if(response.explanation){
             addNewChatBox(response.explanation, false);
         }
+        document.getElementById('message-box').disabled = false;
     }
 }
 
@@ -226,12 +226,14 @@ function createChangeBox(vscode, message, filePath, pending, wasAccepted, change
 function acceptChanges(vscode,changeID){
     return function(){
         vscode.postMessage({type: 'accept-changes', value: changeID});
+        document.getElementById('message-box').disabled = false;
     };
 }
 
 function declineChanges(vscode,changeID){
     return function(){
         vscode.postMessage({type: 'decline-changes', value: changeID});
+        document.getElementById('message-box').disabled = false;
     };
 }
 

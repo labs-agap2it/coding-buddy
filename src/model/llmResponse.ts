@@ -1,4 +1,17 @@
 import * as vscode from 'vscode';
+
+export enum llmStatusEnum{
+    success,
+    error,
+    noApiKey,
+    noResponse
+}
+
+export interface llmMessage{
+    status:llmStatusEnum,
+    content?:llmResponse
+}
+
 export interface llmResponse{
     chat:string,
     code:llmCode[],
@@ -20,7 +33,7 @@ export interface llmChange{
     text:string,
     lines:{start:number, end:number},
     willReplaceCode:boolean,
-    isSingleLine:boolean,
+    isSingleLine:boolean
 }
 
 export interface llmAdditionalInfo{

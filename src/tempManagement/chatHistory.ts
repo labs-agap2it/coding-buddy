@@ -34,7 +34,7 @@ export function deleteChat(){
 
 }
 
-export function saveChat(user:string, llm:string){
+export function saveChat(user:string, llm:llmResponse){
     let chatJSON:ChatData = getChatFile();
     let openedChat = chatJSON.openedChat;
 
@@ -129,4 +129,17 @@ function createModificationStateOnLlmMessage(llmResponse:any):llmResponse{
         return response;
     }
     return llmResponse;
+}
+
+export function getPendingChanges():llmResponse["code"]{
+    let openedChat:Message[] | undefined = getOpenedChat();
+    if(!openedChat || openedChat.length === 0) {return [];}
+    let pendingChanges = [];
+    for(let i = 0; i < openedChat.length; i++){
+        if(openedChat[i].llmResponse.code[0].hasPendingChanges){
+            pendingChanges.push(openedChat[i].llmResponse.code[0]);
+        }
+    }
+
+    return pendingChanges;
 }
