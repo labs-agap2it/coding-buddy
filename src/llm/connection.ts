@@ -7,12 +7,12 @@ import { llmMessage, llmResponse, llmStatusEnum } from '../model/llmResponse';
 
 const openai = new OpenAI();
 
-export async function getLLMJson(message:string):Promise<llmMessage>{
+export async function getLLMJson(message:string, additionalInfo?:string[]):Promise<llmMessage>{
     let apiKey = savedSettings.getAPIKey();
     let userModel = savedSettings.getModel();
     if(!apiKey || apiKey === undefined ){ return {status: llmStatusEnum.noApiKey}; }
     openai.apiKey = apiKey;
-    let llmMessages = await buildMessages(message);
+    let llmMessages = await buildMessages(message, additionalInfo);
     const completion = await openai.chat.completions.create({
         model: userModel,
         response_format:{
@@ -25,8 +25,9 @@ export async function getLLMJson(message:string):Promise<llmMessage>{
     let response:llmResponse = JSON.parse(completion.choices[0].message.content);
     for (let i = 0; i < response.code.length; i++) {
         response.code[i].changeID = generateChangeID();
+        response.code[i].hasPendingChanges = true;
+        response.code[i].wasAccepted = false;
     }
-    chatHistory.saveChat(message, response);
     return { status: llmStatusEnum.success, content:response };
 }
 

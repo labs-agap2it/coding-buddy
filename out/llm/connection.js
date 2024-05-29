@@ -30,18 +30,17 @@ exports.testAPIKey = exports.getLLMJson = void 0;
 const openai_1 = __importDefault(require("openai"));
 const savedSettings = __importStar(require("../settings/savedSettings"));
 const vscode = __importStar(require("vscode"));
-const chatHistory = __importStar(require("../tempManagement/chatHistory"));
 const requestBuilder_1 = require("./requestBuilder");
 const llmResponse_1 = require("../model/llmResponse");
 const openai = new openai_1.default();
-async function getLLMJson(message) {
+async function getLLMJson(message, additionalInfo) {
     let apiKey = savedSettings.getAPIKey();
     let userModel = savedSettings.getModel();
     if (!apiKey || apiKey === undefined) {
         return { status: llmResponse_1.llmStatusEnum.noApiKey };
     }
     openai.apiKey = apiKey;
-    let llmMessages = await (0, requestBuilder_1.buildMessages)(message);
+    let llmMessages = await (0, requestBuilder_1.buildMessages)(message, additionalInfo);
     const completion = await openai.chat.completions.create({
         model: userModel,
         response_format: {
@@ -56,8 +55,9 @@ async function getLLMJson(message) {
     let response = JSON.parse(completion.choices[0].message.content);
     for (let i = 0; i < response.code.length; i++) {
         response.code[i].changeID = generateChangeID();
+        response.code[i].hasPendingChanges = true;
+        response.code[i].wasAccepted = false;
     }
-    chatHistory.saveChat(message, response);
     return { status: llmResponse_1.llmStatusEnum.success, content: response };
 }
 exports.getLLMJson = getLLMJson;

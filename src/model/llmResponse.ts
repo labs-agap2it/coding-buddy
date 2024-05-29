@@ -15,6 +15,8 @@ export interface llmMessage{
 export interface llmResponse{
     chat:string,
     code:llmCode[],
+    willNeedMoreInfo:boolean,
+    ignoredDirectories:string[],
     additional_info:llmAdditionalInfo[],
     explanation:string,
     intent:string
@@ -38,5 +40,5 @@ export interface llmChange{
 
 export interface llmAdditionalInfo{
     possiblePath:vscode.Uri,
-    keywords:string[]
+    keyword:string
 }

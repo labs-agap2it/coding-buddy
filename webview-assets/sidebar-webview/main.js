@@ -88,6 +88,8 @@ window.addEventListener('message', event =>{
             processLLMResponse(vscode,message.value);
             toggleLoader();
         break;
+        case 'searching-file':
+        break;
         case 'history':
             let messages = message.value;
             if(messages === undefined){
@@ -124,7 +126,11 @@ window.addEventListener('message', event =>{
 function processLLMResponse(vscode, response){
     if(response.intent === 'fix' || response.intent === 'generate'){
         if(response.code){
-            createChangeBox(vscode, response.code[0].explanation, response.code[0].file, response.code[0].hasPendingChanges, response.code[0].wasAccepted, response.code[0].changeID);
+            if(response.code.length ===1){
+                createChangeBox(vscode, response.code[0].explanation, response.code[0].file, response.code[0].hasPendingChanges, response.code[0].wasAccepted, response.code[0].changeID);
+            }else{
+                createMultipleChangeBox();
+            }
         }else if(response.additional_info_needed){
             showNeededInfo(response.additional_info_needed);
         }
@@ -136,6 +142,10 @@ function processLLMResponse(vscode, response){
         }
         document.getElementById('message-box').disabled = false;
     }
+}
+
+function createMultipleChangeBox(){
+    
 }
 
 function createChangeBox(vscode, message, filePath, pending, wasAccepted, changeID){

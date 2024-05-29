@@ -36,9 +36,9 @@ function getUserCode() {
     }
     return `
     ### FILE URI: ${vscode.window.activeTextEditor?.document.uri.toString()} ###
-    ### CODE START
+    ### OPEN FILE START
     ${formattedCode}
-    ### CODE END`;
+    ### OPEN FILE END`;
 }
 exports.getUserCode = getUserCode;
 var highlightDecoration;
@@ -96,6 +96,10 @@ async function changeTextOnEditor(change, editor, previousCodeArray) {
             for (let i = previousCodeArray.length; i < change.lines.start; i++) {
                 editBuilder.insert(new vscode.Position(i, 0), "\n");
             }
+        }
+        let lineText = editor.document.getText().split(/\r\n|\r|\n/)[start.line];
+        if (!change.willReplaceCode && lineText !== "") {
+            change.text += "\n";
         }
         editBuilder.insert(start, change.text);
     });

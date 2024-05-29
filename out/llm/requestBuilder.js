@@ -27,7 +27,7 @@ exports.buildMessages = void 0;
 const editorUtils = __importStar(require("../editor/userEditor"));
 const chatHistory = __importStar(require("../tempManagement/chatHistory"));
 const directives_1 = require("./directives");
-async function buildMessages(userMessage) {
+async function buildMessages(userMessage, additionalInfo) {
     let userCode = editorUtils.getUserCode();
     let messages = [
         {
@@ -42,6 +42,14 @@ async function buildMessages(userMessage) {
         role: "system",
         content: directives_1.codeExamples
     });
+    if (additionalInfo) {
+        for (let i = 0; i < additionalInfo.length; i++) {
+            messages.push({
+                role: "system",
+                content: additionalInfo[i]
+            });
+        }
+    }
     let messageHistory = buildHistoryArray();
     if (messageHistory.length > 0) {
         for (let i = 0; i < messageHistory.length; i++) {

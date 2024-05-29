@@ -4,7 +4,10 @@ import * as savedSettings from "../settings/savedSettings";
 import * as chatHistory from "../tempManagement/chatHistory";
 import * as userEditor from "../editor/userEditor";
 import * as codeHistory from "../tempManagement/codeHistory";
-import { llmStatusEnum, llmResponse } from "../model/llmResponse";
+import { searchForKeywords } from "../fileSystem/fileSearch";
+import { prepareFilesForLLM } from "../fileSystem/fileReader";
+import { KeywordSearch } from "../model/keywordSearch";
+import { llmStatusEnum, llmResponse, llmMessage } from "../model/llmResponse";
 import { Message } from "../model/chatModel";
 
 export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
@@ -14,16 +17,30 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
 
   private codeArray: any[] = codeHistory.getCodeHistory();
 
+  private infoHistory:string[] = [];
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
-  async handleUserRequestToLLM(message:string){
-    let response = await buddy.getLLMJson(message);
+  async handleUserRequestToLLM(message:string, additionalInfo?:string[]){
+    let response:llmMessage | undefined = undefined;
+    if(additionalInfo === undefined || additionalInfo.length === 0){
+      response = await buddy.getLLMJson(message);
+    }else{
+      this.infoHistory.concat(additionalInfo);
+      response = await buddy.getLLMJson(message, this.infoHistory);
+    }
+    console.log(response);
     if(response.status === llmStatusEnum.success){
       let content = response.content as llmResponse;
-      if(content.intent === "generate" || content.intent === "fix"){
-        this.handleChangesOnEditor(content);
+      if(content.willNeedMoreInfo){
+        this.handleLLMAdditionalInfo(message, content);
+      }else{
+        this.infoHistory = [];
+        if(content.intent === "generate" || content.intent === "fix"){
+          await this.handleChangesOnEditor(content);
+        }
+        this._view?.webview.postMessage({ type: "llm-response", value: content });
+        chatHistory.saveChat(message, response.content as llmResponse);
       }
-      this._view?.webview.postMessage({ type: "llm-response", value: content });
     }else if(response.status === llmStatusEnum.noApiKey){
       let apiKey = savedSettings.getAPIKey();
       if(!apiKey || apiKey === undefined){
@@ -31,6 +48,18 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
       }
     }else if(response.status === llmStatusEnum.noResponse){
       this._view?.webview.postMessage({ type: "no-response" });
+    }
+  }
+
+  async handleLLMAdditionalInfo(userPrompt:string, response:llmResponse){
+    let searchResult = await searchForKeywords(response);
+    if(searchResult !== undefined && searchResult!.length > 0){
+      this._view?.webview.postMessage({ type: "searched_files", value: searchResult });
+      let parsedFiles:string[] = [];
+      parsedFiles = await prepareFilesForLLM(searchResult as KeywordSearch[]);
+      this.handleUserRequestToLLM(userPrompt, parsedFiles);
+    }else{
+      this._view?.webview.postMessage({ type: "no-search-results" });
     }
   }
 

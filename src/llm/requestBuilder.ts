@@ -4,7 +4,7 @@ import * as chatHistory from "../tempManagement/chatHistory";
 import { Message } from "../model/chatModel";
 import { codeExamples, jsonFormat, rulesets } from "./directives";
 
-export async function buildMessages(userMessage:string):Promise<OpenAI.Chat.Completions.ChatCompletionMessageParam[]> {
+export async function buildMessages(userMessage:string, additionalInfo?:string[]):Promise<OpenAI.Chat.Completions.ChatCompletionMessageParam[]> {
     let userCode = editorUtils.getUserCode();
     let messages:OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
@@ -24,7 +24,16 @@ export async function buildMessages(userMessage:string):Promise<OpenAI.Chat.Comp
         }
     );
 
-
+    if(additionalInfo){
+        for(let i = 0; i < additionalInfo.length; i++){
+            messages.push(
+                {
+                    role: "system",
+                    content: additionalInfo[i]
+                }
+            );
+        }
+    }
 
     let messageHistory = buildHistoryArray();
     if(messageHistory.length > 0){

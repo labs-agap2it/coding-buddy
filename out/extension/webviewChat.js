@@ -30,23 +30,41 @@ const savedSettings = __importStar(require("../settings/savedSettings"));
 const chatHistory = __importStar(require("../tempManagement/chatHistory"));
 const userEditor = __importStar(require("../editor/userEditor"));
 const codeHistory = __importStar(require("../tempManagement/codeHistory"));
+const fileSearch_1 = require("../fileSystem/fileSearch");
+const fileReader_1 = require("../fileSystem/fileReader");
 const llmResponse_1 = require("../model/llmResponse");
 class CodingBuddyViewProvider {
     _extensionUri;
     static viewType = "coding-buddy.buddyWebview";
     _view;
     codeArray = codeHistory.getCodeHistory();
+    infoHistory = [];
     constructor(_extensionUri) {
         this._extensionUri = _extensionUri;
     }
-    async handleUserRequestToLLM(message) {
-        let response = await buddy.getLLMJson(message);
+    async handleUserRequestToLLM(message, additionalInfo) {
+        let response = undefined;
+        if (additionalInfo === undefined || additionalInfo.length === 0) {
+            response = await buddy.getLLMJson(message);
+        }
+        else {
+            this.infoHistory.concat(additionalInfo);
+            response = await buddy.getLLMJson(message, this.infoHistory);
+        }
+        console.log(response);
         if (response.status === llmResponse_1.llmStatusEnum.success) {
             let content = response.content;
-            if (content.intent === "generate" || content.intent === "fix") {
-                this.handleChangesOnEditor(content);
+            if (content.willNeedMoreInfo) {
+                this.handleLLMAdditionalInfo(message, content);
             }
-            this._view?.webview.postMessage({ type: "llm-response", value: content });
+            else {
+                this.infoHistory = [];
+                if (content.intent === "generate" || content.intent === "fix") {
+                    await this.handleChangesOnEditor(content);
+                }
+                this._view?.webview.postMessage({ type: "llm-response", value: content });
+                chatHistory.saveChat(message, response.content);
+            }
         }
         else if (response.status === llmResponse_1.llmStatusEnum.noApiKey) {
             let apiKey = savedSettings.getAPIKey();
@@ -56,6 +74,19 @@ class CodingBuddyViewProvider {
         }
         else if (response.status === llmResponse_1.llmStatusEnum.noResponse) {
             this._view?.webview.postMessage({ type: "no-response" });
+        }
+    }
+    async handleLLMAdditionalInfo(userPrompt, response) {
+        let searchResult = await (0, fileSearch_1.searchForKeywords)(response);
+        if (searchResult !== undefined && searchResult.length > 0) {
+            this._view?.webview.postMessage({ type: "searched_files", value: searchResult });
+            let parsedFiles = [];
+            parsedFiles = await (0, fileReader_1.prepareFilesForLLM)(searchResult);
+            this.handleUserRequestToLLM(userPrompt, parsedFiles);
+        }
+        else {
+            this._view?.webview.postMessage({ type: "no-search-results" });
+            console.log('bro é tão burro que nem sabe oq quer :skull:');
         }
     }
     async handleChangesOnEditor(response) {

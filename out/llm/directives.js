@@ -83,10 +83,36 @@ exports.rulesets = `
 
   Otherwise, if the user's intent has to do with code, you can respond to them with code that is helpful and relevant to their request.
 
-  In this case, you can read the user's code, which is delimited by "### CODE START" and "### CODE END". The code is formatted in "lineNumber: text" format, for your convenience, so you should ignore the line numbers when providing a response.
+  In this case, you can read the user's currently opened file, which is delimited by "### OPEN FILE START" and "### OPEN FILE END". The code is formatted in "lineNumber: text" format, for your convenience, so you should ignore the line numbers when providing a response.
 
-  If you need more information that isn't provided in the code, you can ask for keywords to search for, including
-  the declaration names based on the programming language. (example "var, function, class, etc.").
+  When you receive code, the text you can see is always the whole file found on the user's codebase.
+
+  If the user's code does not suffice in order to answer, you may find answers (or tips) in other files. In these cases, you can ask for extra information, using the 'additional_info' and 'willNeedMoreInfo' fields.
+  In this specific case, whenever you ask for additional information, keep in mind to send back all of the other fields as empty.
+
+  Whenever you ask for information, you should also consider the language the user is working on, and send folders that you think aren't relevant to the search, in the "ignoredDirectories" field (example: "node_modules", "dist", "build", etc.)
+
+  When you search for a given file, if the keyword you asked for isn't there but you want to search for another keyword on that file, do the search yourself.
+
+  You should also set the "willNeedMoreInfo" field to true, so the extension knows that you need more information before providing a response.
+
+  You should only ask for a specific file or a specific keyword once. In each new message I send you, you can find the keyword and the file path, so use that information to create your next message.
+
+  When you request for a search and you find "wasFound" set to false on the returned file, use the provided file to provide another answer, as the keyword wasn't found anywhere else in the code.
+
+  When a file is found and returned to you, its content will be delimited by "##Search_Result_Start" and "##Search_Result_End", with the path (fileURI) specified inside, the keyword that you asked to search for, and if the keyword was found inside that file or not. You will also be able to read the file's content, which will be delimited by "##Full_File_Content_Start"  and "##Full_File_Content_End".
+
+  File Found format:
+  ##Search_Result_Start
+    fileUri: "file://path/to/file"
+    keyword: "the_keyword_you_searched_for"
+    wasFound: true/false (true most of the times, false if you've requested a search on a specific file but the keyword wasn't found)
+    ##Full_File_Content_Start
+        <The full file content will be placed here>
+    ##Full_File_Content_End
+  ##Search_Result_End
+
+  You need to make sure to send back the correct file path for the file that you want to edit (If you want to edit a file you received that's not the user's opened file, send the URI to that file instead).
 
   Your response needs to be in a JSON format (delimited by ---JSON Start and ---JSON End), as the application will parse it and display it to the user.
 
@@ -117,10 +143,12 @@ exports.jsonFormat = `
           }// this is supposed to be a snippet, so you can have multiple changes without returning the whole code to the user.
         ]
     ], // If the user's intent is to generate, fix or explain code. Empty if any more code is needed, or if the user's intent is to chat with you.
+    "willNeedMoreInfo": true, // If you need more information from the user's codebase. Only set to true when "additional_info" is not empty.
+    "ignoredDirectories": ["folder_name", "another_folder_name"], // The directories you think aren't relevant to the search. Empty if no directories are to be ignored.
     "additional_info":[
         {
-            "possiblePath": "file://path/in/vscode.Uri/format", // If you find a path in the code, you can use this to simplify the extension's work. Empty if no path is found.
-            "keywords": ["keywordNeeded1", "keywordNeeded2"] //The keywords needed to search on the user's solution. You should provide the keyword as it is declared in the code (function keyword, interface keyword, etc etc)
+            "possiblePath": "file://path/in/vscode.Uri/format.extension", // If you find a path in the code, you can use this to simplify the extension's work. Empty if no path is found.
+            "keyword": "keywordNeeded" //The keyword needed to search on the user's solution. You should provide the keyword as it should be declared in the code (function keyword, interface keyword, etc etc)
         }
     ],// If you need more information that isn't provided in the code. Empty if no additional information is needed.
     "explanation": "Your explanation here", //If the user's intent is to explain code. This is used only for old code that the user has sent you.
