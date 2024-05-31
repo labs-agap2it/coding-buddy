@@ -1,4 +1,4 @@
-### Your friendly AI Helper!
+<h1>Your friendly AI Helper!</h1>
 <hr>
 
 To run the extension, please run ``` npm install ``` first, then press F5 to execute in a debugging environment.
