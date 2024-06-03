@@ -134,13 +134,12 @@ export const jsonFormat =`
   {
     "chat":"Your response here" // If the user's intent is to chat with you. Empty if the user's intent isn't to chat with you. This output needs to be in html format. You shouldn't include a "p" tag in the response.
     "code":[
-        "file":"vscode.path/to/file", //the file's path, using VSCode's URI format. You will always receive the file's path on the user's code, specified as ### FILE URI: vscode.path/to/file ###
+        "file":"file:///vscode/path/to/file", //the file's path, using VSCode's URI format. You will always receive the file's path on the user's code, specified as ### FILE URI: vscode.path/to/file ###
         "explanation": "", //an explanation of the code you're providing. This output needs to be in html format. 
         "changes":[
           {
             "text": "Your code here",
             "lines": {start: 0, end: 0}, // When sending over lines, please make sure that if you create new lines, the rest of the objects in the array are updated accordingly.
-            "signature":"", // this is your own signature, so the user can find your code. you should use the current language's comment syntax, followed by "Coding Buddy". Examples: "//Coding Buddy", "#Coding Buddy", "--Coding Buddy", etc.
             "willReplaceCode": true,
             "isSingleLine":true
           }// this is supposed to be a snippet, so you can have multiple changes without returning the whole code to the user.

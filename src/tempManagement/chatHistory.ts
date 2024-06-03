@@ -87,7 +87,6 @@ export function handleChanges(changeID: any, wasAccepted: boolean) {
         if(llmCode[i].changeID === changeID){
             llmCode[i].hasPendingChanges = false;
             llmCode[i].wasAccepted = wasAccepted;
-            llmCode[i].changeID = "";
         }
     }
     modifyChatCode(llmCode);
