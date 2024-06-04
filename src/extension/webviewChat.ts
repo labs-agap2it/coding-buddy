@@ -7,7 +7,7 @@ import * as codeHistory from "../tempManagement/codeHistory";
 import { searchForKeywords } from "../fileSystem/fileSearch";
 import { prepareFilesForLLM } from "../fileSystem/fileReader";
 import { KeywordSearch } from "../model/keywordSearch";
-import { llmStatusEnum, llmResponse, llmMessage } from "../model/llmResponse";
+import { llmStatusEnum, llmResponse, llmMessage, llmChange, llmCode } from "../model/llmResponse";
 import { Message } from "../model/chatModel";
 
 export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
@@ -25,7 +25,8 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     if(additionalInfo === undefined || additionalInfo.length === 0){
       response = await buddy.getLLMJson(message);
     }else{
-      this.infoHistory.concat(additionalInfo);
+      this. infoHistory = this.infoHistory.concat(additionalInfo);
+      console.log(this.infoHistory);
       response = await buddy.getLLMJson(message, this.infoHistory);
     }
     console.log(response);
@@ -54,7 +55,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   async handleLLMAdditionalInfo(userPrompt:string, response:llmResponse){
     let searchResult = await searchForKeywords(response);
     if(searchResult !== undefined && searchResult!.length > 0){
-      this._view?.webview.postMessage({ type: "searched_files", value: searchResult });
+      this._view?.webview.postMessage({ type: "searched-files", value: searchResult });
       let parsedFiles:string[] = [];
       parsedFiles = await prepareFilesForLLM(searchResult as KeywordSearch[]);
       this.handleUserRequestToLLM(userPrompt, parsedFiles);
@@ -63,13 +64,38 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  async handleChangesOnEditor(response:llmResponse){
-    response.code.forEach(async (element: any) =>
-      {
-      await userEditor.insertSnippetsOnEditor(element.changes, element.changeID, vscode.Uri.parse(element.file));
-      this.codeArray = codeHistory.getCodeHistory();
-      userEditor.checkForUserInputOnEditor(this, element.changeID, this.codeArray);
-    });
+  async changeOpenedFile(code:llmCode){
+    let editor = vscode.window.activeTextEditor;
+    if(!editor){return;}
+
+    let filePath = vscode.Uri.parse(code.file.toString());
+
+    if(filePath.toString() !== editor.document.uri.toString()){
+      let document = await vscode.workspace.openTextDocument(filePath);
+      editor = await vscode.window.showTextDocument(document);
+    }
+  }
+
+  async handleChangesOnEditor(response:llmResponse, changeID?:string){
+    if(changeID !== undefined && changeID !== ""){
+      let element = response.code.find((element:any)=> element.changeID === changeID);
+      if(!element){return;}
+      await this.changeOpenedFile(element);
+      if(element.hasPendingChanges){
+        await userEditor.replaceHighlightedCodeOnEditor(element.changes, element.changeID, element.file.toString());
+        this.codeArray = codeHistory.getCodeHistory();
+        userEditor.checkForUserInputOnEditor(this, changeID, this.codeArray);
+      }
+    }else{
+      for(let i = response.code.length -1; i >= 0; i--){
+        let element = response.code[i];
+        await userEditor.insertSnippetsOnEditor(element.changes, element.changeID, element.file.toString());
+        this.codeArray = codeHistory.getCodeHistory();
+        if(element === response.code[0]){
+          userEditor.checkForUserInputOnEditor(this, element.changeID, this.codeArray);
+        }
+      };
+    }
   }
 
   public async resolveWebviewView(
@@ -120,6 +146,11 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
             this.restorePreviousSession(history);
           }
           break;
+        case "change-opened-file":
+          let response = data.value.response as llmResponse;
+          let changeID = data.value.changeID;
+          await this.handleChangesOnEditor(response, changeID);
+        break;
       }
     });
   }
@@ -133,9 +164,9 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
             let changeID = history[i].llmResponse.code[j].changeID;
             let userOldCodeArray = codeHistory.getCodeHistory();
             let userOldCode = userOldCodeArray.find((element:any)=> element.changeID === changeID);
-            await userEditor.replaceCodeOnEditor(userOldCode.code, userOldCode.filePath);
+            await userEditor.replaceCodeOnEditor(userOldCode.code, userOldCode.filePath.toString());
             if(userOldCodeArray.length > 0){
-              await userEditor.insertSnippetsOnEditor(llmCode.changes, changeID, vscode.Uri.parse(userOldCode.filePath));
+              await userEditor.insertSnippetsOnEditor(llmCode.changes, changeID, userOldCode.filePath.toString());
               this.codeArray = codeHistory.getCodeHistory();
               userEditor.checkForUserInputOnEditor(this, changeID, this.codeArray);
             }

@@ -88,7 +88,9 @@ window.addEventListener('message', event =>{
             processLLMResponse(vscode,message.value);
             toggleLoader();
         break;
-        case 'searching-file':
+        case 'searched-files':
+            let foundFiles = message.value;
+            showFoundFiles(foundFiles);
         break;
         case 'history':
             let messages = message.value;
@@ -126,10 +128,10 @@ window.addEventListener('message', event =>{
 function processLLMResponse(vscode, response){
     if(response.intent === 'fix' || response.intent === 'generate'){
         if(response.code){
-            if(response.code.length ===1){
+            if(response.code.length === 1){
                 createChangeBox(vscode, response.code[0].explanation, response.code[0].file, response.code[0].hasPendingChanges, response.code[0].wasAccepted, response.code[0].changeID);
             }else{
-                createMultipleChangeBox();
+                createMultipleChangeBox(vscode, response);
             }
         }else if(response.additional_info_needed){
             showNeededInfo(response.additional_info_needed);
@@ -144,15 +146,10 @@ function processLLMResponse(vscode, response){
     }
 }
 
-function createMultipleChangeBox(){
-    
-}
-
-function createChangeBox(vscode, message, filePath, pending, wasAccepted, changeID){
-    let code = [];
-    //main container
-    let changeBox = document.createElement('div');
-    changeBox.className = 'message-chat-box chat-bot';
+function createMultipleChangeBox(vscode, response){
+    let responseCode = response.code;
+    let changeWrapper = document.createElement('div');
+    changeWrapper.className = 'message-chat-box chat-bot dropdown';
 
     //coding buddy's name
     let name = document.createElement('b');
@@ -163,13 +160,160 @@ function createChangeBox(vscode, message, filePath, pending, wasAccepted, change
     let divider1 = document.createElement('div');
     divider1.className = 'divider';
 
-    let divider2 = divider1.cloneNode(true);
-    let divider3 = divider1.cloneNode(true);
+    //message displayed before the change explanation
+    let changeMessage = document.createElement('p');
+    changeMessage.innerHTML = "Here are your changes!";
+    changeWrapper.appendChild(name);
+    changeWrapper.appendChild(divider1);
+    changeWrapper.appendChild(changeMessage);
+
+    //change loop for all changes
+
+    let dropdownWrapper = document.createElement('div');
+    dropdownWrapper.className = 'dropdown-wrapper';
+
+    for(let i = 0; i < responseCode.length; i++){
+        let change = responseCode[i];
+        let dropdown = document.createElement('div');
+        dropdown.className = 'dropdown';
+
+        let fileName = change.file.split('/').pop();
+
+        let name = document.createElement('p');
+        name.innerHTML = fileName;
+
+        let state = document.createElement('p');
+        state.className = change.hasPendingChanges ? 'hidden' : 'state';
+        state.innerHTML = change.wasAccepted ? '- accepted' : '- declined';
+
+        let icon = document.createElement('i');
+        icon.classList.add('codicon','codicon-file');
+
+        let title = document.createElement('div');
+        title.className = 'title';
+        title.onclick = function(){toggleDropdown(change.changeID);};
+
+        title.appendChild(icon);
+        title.appendChild(name);
+        title.appendChild(state);
+
+        let dropdownMarker = document.createElement('i');
+        if(i === 0){
+            dropdownMarker.classList.add('codicon','codicon-chevron-up');
+        }else{
+            dropdownMarker.classList.add('codicon','codicon-chevron-down');
+        }
+        dropdownMarker.id = 'marker' + change.changeID;
+        dropdownMarker.onclick = function(){toggleDropdown(change.changeID);};
+
+        let openFile = document.createElement('i');
+        openFile.classList.add('codicon','codicon-open-preview');
+        openFile.onclick = function(){switchOpenedFile(vscode, response, change.changeID);};
+
+
+        let options = document.createElement('div');
+        options.className = 'options';
+        options.appendChild(dropdownMarker);
+        options.appendChild(openFile);
+
+        let header = document.createElement('div');
+        header.className = 'dropdown-header';
+
+        header.appendChild(title);
+        header.appendChild(options);
+
+        let content = document.createElement('div');
+        if(i === 0){
+            content.className = 'dropdown-content';
+        }else{
+            content.className = 'dropdown-content hidden';
+        }
+        content.id = change.changeID;
+        if(i === responseCode.length - 1){
+            content.classList.add('last');
+        }
+
+        let explanation = document.createElement('p');
+        explanation.innerHTML = change.explanation;
+
+        let buttonContainer = document.createElement('div');
+        buttonContainer.className = 'button-container';
+
+        let acceptButton = document.createElement('button');
+        acceptButton.className = 'accept-button';
+        acceptButton.innerHTML = 'Accept';
+        acceptButton.onclick = acceptChanges(vscode,change.changeID);
+        let declineButton = document.createElement('button');
+        declineButton.className = 'decline-button';
+        declineButton.innerHTML = 'Decline';
+        declineButton.onclick = declineChanges(vscode,change.changeID);
+
+        buttonContainer.appendChild(declineButton);
+        buttonContainer.appendChild(acceptButton);
+
+        content.appendChild(explanation);
+        if(change.hasPendingChanges){
+            content.appendChild(buttonContainer);
+        }
+
+        dropdown.appendChild(header);
+        dropdown.appendChild(content);
+        let divider = document.createElement('div');
+        divider.className = 'divider';
+
+        
+        dropdownWrapper.appendChild(dropdown);
+        if(i !== responseCode.length - 1){
+            dropdownWrapper.appendChild(divider);
+        }
+    }
+
+    changeWrapper.appendChild(dropdownWrapper);
+    document.getElementById('chat-container').appendChild(changeWrapper);
+    if(document.querySelector('#info-container').innerHTML !== ''){
+        document.querySelector('#info-container').classList.add('hidden');
+        document.querySelector('#info-container').innerHTML = '';
+    }
+}
+
+function switchOpenedFile(vscode, response, changeID){
+    vscode.postMessage({type: 'change-opened-file', value: {response:response, changeID:changeID}});
+}
+
+function toggleDropdown(id){
+    let dropdown = document.getElementById(id);
+    dropdown.classList.toggle('hidden');
+    let marker = document.getElementById('marker' + id);
+    if(marker.classList.contains('codicon-chevron-down')){
+        marker.classList.remove('codicon-chevron-down');
+        marker.classList.add('codicon-chevron-up');
+    }else{
+        marker.classList.remove('codicon-chevron-up');
+        marker.classList.add('codicon-chevron-down');
+    }
+}
+
+function createChangeBox(vscode, message, filePath, pending, wasAccepted, changeID){
+    //main container
+    let changeBox = document.createElement('div');
+    changeBox.className = 'message-chat-box chat-bot';
+
+    //coding buddy's name
+    let name = document.createElement('b');
+    name.className = 'bot-name';
+    name.innerHTML = 'Coding Buddy';
+
+    //divider declaration
 
     //message displayed before the change explanation
     let changeMessage = document.createElement('p');
     changeMessage.innerHTML = "Here are your changes!";
+    
+    let divider1 = document.createElement('div');
+    divider1.className = 'divider';
 
+    let divider2 = divider1.cloneNode(true);
+    let divider3 = divider1.cloneNode(true);
     //change explanation box
     let explanationBox = document.createElement('div');
     explanationBox.className = 'explanation-box';
@@ -227,10 +371,15 @@ function createChangeBox(vscode, message, filePath, pending, wasAccepted, change
     explanationBox.appendChild(divider3);
     explanationBox.appendChild(buttonContainer);
     }
-    
+
+
     changeBox.appendChild(explanationBox);
 
     document.getElementById('chat-container').appendChild(changeBox);
+    if(document.querySelector('#info-container').innerHTML !== ''){
+        document.querySelector('#info-container').classList.add('hidden');
+        document.querySelector('#info-container').innerHTML = '';
+    }
 }
 
 function acceptChanges(vscode,changeID){
@@ -247,16 +396,33 @@ function declineChanges(vscode,changeID){
     };
 }
 
-function showNeededInfo(info){
-    let infoContainer = document.getElementById('info-container');
-    infoContainer.classList.remove("hidden");
+function showFoundFiles(files){
+    console.log(files);
+    let infoContainer = document.querySelector('#info-container');
+    if(infoContainer.classList.contains('hidden')){
+        infoContainer.classList.remove('hidden');
+    }
     infoContainer.innerHTML = '';
-    info.forEach(element =>{
-        let wrapper = document.createElement('div');
-        wrapper.className = 'info-wrapper';
-        let text = document.createElement('p');
-        text.innerHTML = "Searching for '" + element.keyword + "' in your code...";
-        wrapper.appendChild(text);
-        infoContainer.appendChild(wrapper);
+    //compare file paths on list to check for duplicates
+    files = files.filter((file, index) => files.indexOf(file).searchResult === index.searchResult);
+    files.forEach(element => {
+        let filename = element.searchResult.fsPath.split('\\').pop();
+        let message = "Sending file " + filename;
+        let fileDiv = createInformationDiv(message, true);
+        infoContainer.appendChild(fileDiv);
     });
+}
+
+function createInformationDiv(message, showsFile){
+    let wrapper = document.createElement('div');
+    wrapper.className = 'info-wrapper';
+    let text = document.createElement('p');
+    text.innerHTML = message;
+    if(showsFile){
+        let fileIcon = document.createElement('i');
+        fileIcon.classList.add('codicon','codicon-file');
+        wrapper.appendChild(fileIcon);
+    }
+    wrapper.appendChild(text);
+    return wrapper;
 }
