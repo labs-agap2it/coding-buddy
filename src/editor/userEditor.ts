@@ -20,11 +20,14 @@ export function getUserCode():string{
 
 var highlightDecoration: vscode.TextEditorDecorationType;
 
-export async function insertSnippetsOnEditor(changeList: llmChange[], changeID: string, file:vscode.Uri){
+export async function insertSnippetsOnEditor(changeList: llmChange[], changeID: string, file:string){
     let editor = vscode.window.activeTextEditor;
 
-    if(!editor || editor.document.uri.toString() !== file.toString()){
-        let document = await vscode.workspace.openTextDocument(file);
+    let parsedFile = vscode.Uri.parse(file);
+    console.log(editor?.document.uri);
+    console.log(parsedFile);
+    if(!editor || editor.document.uri.toString() !== parsedFile.toString()){
+        let document = await vscode.workspace.openTextDocument(parsedFile);
         editor = await vscode.window.showTextDocument(document);
     }
 
@@ -107,13 +110,15 @@ export async function checkForUserInputOnEditor(webview: any, changeID:string, c
     let file = codeArray.find((element:any)=> element.changeID === changeID).filePath;
     let userCode = vscode.window.activeTextEditor?.document.getText();
     let newCode = vscode.window.activeTextEditor?.document.getText()!;
-    while(newCode === userCode){
+    while(newCode === userCode && vscode.window.activeTextEditor?.document.uri.toString() === file.toString()){
             await new Promise(resolve => setTimeout(resolve, 250));
             if(vscode.window.activeTextEditor?.document.uri.toString() === file.toString()){
                 newCode = vscode.window.activeTextEditor?.document.getText()!;
             }
     }
-    verifyChangeOnWebview(webview, changeID);
+    if(vscode.window.activeTextEditor?.document.uri.toString() === file.toString()){
+        verifyChangeOnWebview(webview, changeID);
+    }
 }
 
 function verifyChangeOnWebview(webview:any, changeID:string){
@@ -157,9 +162,10 @@ export function handleChangesOnEditor(changeID: any, wasAccepted: boolean, codeA
     chatHistory.handleChanges(changeID, wasAccepted);
 }
 
-export async function replaceCodeOnEditor(editorCode:string, filePath:vscode.Uri){
+export async function replaceCodeOnEditor(editorCode:string, file:string){
     let editor = vscode.window.activeTextEditor;
 
+    let filePath = vscode.Uri.parse(file.toString());
     if(!editor || editor.document.uri.toString() !== filePath.toString()){
         let document = await vscode.workspace.openTextDocument(filePath);
         editor = await vscode.window.showTextDocument(document);
@@ -169,3 +175,45 @@ export async function replaceCodeOnEditor(editorCode:string, filePath:vscode.Uri
         editBuilder.replace(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(editor.document.lineCount, 0)), editorCode);
     });
 }
+
+async function getDecorationRangeFromChange(change:llmChange, editor:vscode.TextEditor, previousCodeArray:string[]):Promise<vscode.Range>{
+    let start = new vscode.Position(change.lines.start -1 , 0);
+    let end = new vscode.Position(change.lines.end -1 , 0);
+    if(change.isSingleLine){
+        end = new vscode.Position(change.lines.start - 1, previousCodeArray[change.lines.start - 1].length);
+    }else{
+        end = new vscode.Position(change.lines.end -1, previousCodeArray[change.lines.end - 1].length);
+    }
+    
+    let range = new vscode.Range(start, end);
+    return range;
+}
+
+export async function replaceHighlightedCodeOnEditor(changes: llmChange[], changeID:string, file:string) {
+    let editor = vscode.window.activeTextEditor;
+    let parsedFile = vscode.Uri.parse(file);
+    if(!editor || editor.document.uri.toString() !== parsedFile.toString()){
+        let document = await vscode.workspace.openTextDocument(parsedFile);
+        editor = await vscode.window.showTextDocument(document);
+    }
+
+    let editorCode = editor.document.getText();
+    let editorCodeArray = editorCode.split(/\r\n|\r|\n/);
+    let decorationList: vscode.DecorationOptions[] = [];
+
+    for(let i = 0; i < changes.length; i++){
+        let decorationRange = await getDecorationRangeFromChange(changes[i], editor, editorCodeArray);
+
+        decorationList.push(showDecorationsOnEditor(decorationRange, changes[i], editorCodeArray));
+    };
+    editor.setDecorations(highlightDecoration, decorationList);
+
+    let response = {
+        code: editorCode,
+        changeID: changeID,
+        filePath: file.toString()
+    };
+
+    codeHistory.saveCodeHistory(response);
+}
+
