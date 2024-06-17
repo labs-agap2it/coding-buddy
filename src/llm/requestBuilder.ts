@@ -6,6 +6,7 @@ import { codeExamples, jsonFormat, rulesets } from "./directives";
 
 export async function buildMessages(userMessage:string, additionalInfo?:string[]):Promise<OpenAI.Chat.Completions.ChatCompletionMessageParam[]> {
     let userCode = editorUtils.getUserCode();
+    console.log(userCode);
     let messages:OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
             role: "system",

@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as savedSettings from '../settings/savedSettings';
+import * as codeHistory from './codeHistory';
 import { Chat, ChatData, Message } from '../model/chatModel';
 import { llmResponse } from '../model/llmResponse';
 
@@ -24,7 +25,20 @@ export function deleteChat(){
         chatJSON.chats = [];
         chatJSON.openedChat = 0;
         fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
+        codeHistory.deleteWholeCodeHistory();
         return;
+    }
+    
+    let deletedChat = chatJSON.chats[chatJSON.openedChat];
+
+    for(let i = 0; i< deletedChat.messages.length; i++){
+        let currentMessage = deletedChat.messages[i];
+        let codeArray = currentMessage.llmResponse.code;
+        if(codeArray.length !== 0){
+            for(let j = 0; j < codeArray.length; j++){
+                codeHistory.deleteCodeHistory(codeArray[j].changeID);
+            }
+        }
     }
 
     chatJSON.chats.splice(chatJSON.openedChat, 1);
@@ -39,10 +53,15 @@ export function saveChat(user:string, llm:llmResponse){
     let openedChat = chatJSON.openedChat;
 
     if(chatJSON.chats[openedChat] === undefined){
-        chatJSON.chats[openedChat] = {title: "Chat " + openedChat + 1, messages: []};
+        let chatNumber = chatJSON.chats.length + 1;
+        chatJSON.chats[openedChat] = {title: "Chat " + chatNumber, messages: []};
     }
 
     if(chatJSON.chats[openedChat].messages.length >= savedSettings.getMaxSavedMessages()){
+        let deletedMessage = chatJSON.chats[openedChat].messages[0];
+        for(let i = 0; i < deletedMessage.llmResponse.code.length; i++){
+            codeHistory.deleteCodeHistory(deletedMessage.llmResponse.code[i].changeID);
+        }
         chatJSON.chats[openedChat].messages.shift();
     }
     chatJSON.chats[openedChat].messages.push({userMessage: user, llmResponse: createModificationStateOnLlmMessage(llm)});

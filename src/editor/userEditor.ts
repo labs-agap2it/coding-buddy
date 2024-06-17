@@ -63,8 +63,11 @@ function defineHighlightDecoration(): vscode.TextEditorDecorationType{
 }
 
 async function changeTextOnEditor(change:llmChange, editor:vscode.TextEditor, previousCodeArray:string[]):Promise<vscode.Range>{
-    let start = new vscode.Position(change.lines.start -1 , 0);
-    let end = new vscode.Position(change.lines.end -1 , 0);
+    let start = new vscode.Position(0 , 0);
+    if(change.lines.start !== 0){
+        start = new vscode.Position(change.lines.start -1 , 0);
+    }
+    let end = new vscode.Position(change.lines.end, 0);
     if(change.isSingleLine){
         if(previousCodeArray.length < change.lines.start){
             end = new vscode.Position(change.lines.end -1, 0);
