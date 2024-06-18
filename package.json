@@ -9,11 +9,10 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
-    "configuration":[
+    "configuration": [
       {
         "title": "Coding Buddy",
         "properties": {
@@ -22,10 +21,14 @@
             "default": "",
             "description": "OpenAI API Key"
           },
-          "codingBuddy.model":{
+          "codingBuddy.model": {
             "type": "string",
             "default": "gpt-3.5-turbo",
-            "enum": ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o"],
+            "enum": [
+              "gpt-3.5-turbo",
+              "gpt-4-turbo",
+              "gpt-4o"
+            ],
             "description": "OpenAI model for Coding Buddy to use. The extension was tested with all models, but it is recommended to use gpt-4-turbo for better results."
           },
           "codingBuddy.maxSavedMessages": {
@@ -37,7 +40,7 @@
       }
     ],
     "menus": {
-      "view/title":[
+      "view/title": [
         {
           "command": "coding-buddy.newChat",
           "group": "navigation@0"
@@ -52,7 +55,7 @@
         },
         {
           "command": "coding-buddy.goToSettings",
-          "group":"navigation@3"
+          "group": "navigation@3"
         }
       ]
     },
@@ -62,7 +65,6 @@
           "id": "buddyChat",
           "title": "Coding Buddy",
           "icon": "media/buddyChat.png"
-          
         }
       ]
     },
@@ -112,7 +114,7 @@
         "category": "Coding Buddy"
       }
     ],
-    "keybindings":[
+    "keybindings": [
       {
         "command": "coding-buddy.textChat",
         "key": "ctrl+shift+enter",
@@ -131,6 +133,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
+    "@types/uuid": "^9.0.8",
     "@types/vscode": "^1.88.0",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
@@ -141,6 +144,7 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "openai": "^4.33.0"
+    "openai": "^4.33.0",
+    "uuid": "^10.0.0"
   }
 }

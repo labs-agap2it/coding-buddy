@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import * as savedSettings from '../settings/savedSettings';
 import * as vscode from 'vscode';
+import {v4 as uuid} from 'uuid';
 import * as chatHistory from '../tempManagement/chatHistory';
 import { buildMessages } from "./requestBuilder";
 import { llmMessage, llmResponse, llmStatusEnum } from '../model/llmResponse';
@@ -32,7 +33,8 @@ export async function getLLMJson(message:string, additionalInfo?:string[]):Promi
 }
 
 function generateChangeID(){
-    return Math.random().toString(36).substring(7);
+    let changeID = uuid();
+    return changeID;
 }
 
 export async function testAPIKey(apiKey: string){
