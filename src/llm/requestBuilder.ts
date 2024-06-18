@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import * as vscode from 'vscode';
 import * as editorUtils from "../editor/userEditor";
 import * as chatHistory from "../tempManagement/chatHistory";
 import { Message } from "../model/chatModel";
@@ -14,6 +15,7 @@ export async function buildMessages(userMessage:string, additionalInfo?:string[]
         }
     ];
 
+    let workspaceURI = vscode.workspace.getWorkspaceFolder;
     messages.push(
         {
             role: "system",
@@ -22,6 +24,10 @@ export async function buildMessages(userMessage:string, additionalInfo?:string[]
         {
             role: "system",
             content: codeExamples
+        },
+        {
+            role:'system',
+            content: "### Workspace URI### (" + workspaceURI + ")#"
         }
     );
 
