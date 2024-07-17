@@ -6,13 +6,13 @@ import * as chatHistory from '../tempManagement/chatHistory';
 import { buildMessages } from "./requestBuilder";
 import { llmMessage, llmResponse, llmStatusEnum } from '../model/llmResponse';
 
-const openai = new OpenAI();
+let openai:OpenAI | undefined = undefined;
 
 export async function getLLMJson(message:string, additionalInfo?:string[]):Promise<llmMessage>{
     let apiKey = savedSettings.getAPIKey();
     let userModel = savedSettings.getModel();
     if(!apiKey || apiKey === undefined ){ return {status: llmStatusEnum.noApiKey}; }
-    openai.apiKey = apiKey;
+    openai = new OpenAI({apiKey});
     let llmMessages = await buildMessages(message, additionalInfo);
     const completion = await openai.chat.completions.create({
         model: userModel,
@@ -38,7 +38,10 @@ function generateChangeID(){
 }
 
 export async function testAPIKey(apiKey: string){
-    openai.apiKey = apiKey;
+    if(apiKey === "" || apiKey === undefined){
+        return;
+    }
+    openai = new OpenAI({apiKey});
     let isValid = false;
     try{
         let response = await openai.chat.completions.create({
