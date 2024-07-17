@@ -73,6 +73,12 @@ export function getChatIndex():number{
     return chatJSON.openedChat;
 }
 
+export function getChatName():string{
+    let chatJSON: ChatData = getChatFile();
+    if(chatJSON.chats[chatJSON.openedChat] === undefined) {return "Chat 1";}
+    return chatJSON.chats[chatJSON.openedChat].title;
+}
+
 export function getOpenedChat():Message[] | undefined{
     let chatJSON:ChatData = getChatFile();
     if(chatJSON.chats[chatJSON.openedChat] === undefined){ return undefined; }
@@ -81,9 +87,18 @@ export function getOpenedChat():Message[] | undefined{
 
 export function getChatList():Chat[]{
     let chatJSON:ChatData = getChatFile();
+    if(chatJSON.chats.length <= 0){
+        createNewChat();
+        chatJSON = getChatFile();
+    }
     return chatJSON.chats;
 }
 
+export function changeChatName(name:string):void{
+    let chatJSON:ChatData = getChatFile();
+    chatJSON.chats[chatJSON.openedChat].title = name;
+    fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
+}
 
 export function createNewChat():Chat{
     let chatJSON:ChatData = getChatFile();
@@ -126,7 +141,13 @@ function modifyChatCode(llmCode:llmResponse["code"]){
 function createChatFile(){
     let chatJSON:ChatData = {
         openedChat: 0,
-        chats: []
+        chats: [
+            {
+                title: "Chat 1",
+                messages: [
+]
+            }
+        ]
     };
     fs.writeFileSync(chatFilePath, JSON.stringify(chatJSON));
     return chatJSON;

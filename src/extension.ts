@@ -21,6 +21,9 @@ export function activate(context: vscode.ExtensionContext) {
 	const changeChatWebview = vscode.commands.registerCommand('coding-buddy.changeChat', async () => {
 		chatService.changeChat(provider);
 	});
+	const editCHatName = vscode.commands.registerCommand('coding-buddy.editChatName', async () => {
+		chatService.editChatName(provider);
+	});
 
 	const showCommandPalletteChat = vscode.commands.registerCommand('coding-buddy.textChat', async () => {
 		textChat.showCommandPalletteChat(provider);	

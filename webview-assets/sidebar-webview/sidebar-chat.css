@@ -183,6 +183,30 @@ b.bot-name{
     justify-content: space-between;
     margin: 0.5rem;
 }
+.chatName-box {
+    position: absolute;
+    z-index: 9999;
+    width: calc(100% - 4rem);
+    padding: 1rem 2rem;
+}
+
+.chatName-input{    
+    color: var(--vscode-foreground);
+    width: 100%;
+    padding: 0.5rem;
+    border: 0;
+    background-color: var(--vscode-activityBar-background);
+}
+
+.chatName-wrapper{    
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border: 1px solid var(--vscode-activityBar-dropBorder);
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0px 10px 15px 0px rgba(0,0,0,0.3);
+}
 
 .accept-button {
     border: 0;

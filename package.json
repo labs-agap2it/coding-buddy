@@ -46,16 +46,20 @@
           "group": "navigation@0"
         },
         {
-          "command": "coding-buddy.changeChat",
+          "command": "coding-buddy.editChatName",
           "group": "navigation@1"
         },
         {
-          "command": "coding-buddy.deleteChat",
+          "command": "coding-buddy.changeChat",
           "group": "navigation@2"
         },
         {
-          "command": "coding-buddy.goToSettings",
+          "command": "coding-buddy.deleteChat",
           "group": "navigation@3"
+        },
+        {
+          "command": "coding-buddy.goToSettings",
+          "group": "navigation@4"
         }
       ]
     },
@@ -111,6 +115,12 @@
         "command": "coding-buddy.goToSettings",
         "title": "Go to Settings",
         "icon": "$(gear)",
+        "category": "Coding Buddy"
+      },
+      {
+        "command": "coding-buddy.editChatName",
+        "title": "Change chat's name",
+        "icon": "$(edit)",
         "category": "Coding Buddy"
       }
     ],

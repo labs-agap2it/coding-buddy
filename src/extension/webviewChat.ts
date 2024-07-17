@@ -190,7 +190,8 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
             return;
           }
           let history = chatHistory.getOpenedChat();
-          webviewView.webview.postMessage({ type: "history", value: history });
+          let chatName = chatHistory.getChatName();
+          webviewView.webview.postMessage({ type: "history", value: {history, chatName} });
           if(history){
             this.restorePreviousSession(history);
           }
@@ -199,6 +200,10 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
           let response = data.value.response as llmResponse;
           let changeID = data.value.changeID;
           await this.handleChangesOnEditor(response, changeID);
+        break;
+        case "chat-name-edited":
+          let newName = data.value;
+          chatHistory.changeChatName(newName);
         break;
       }
     });
@@ -237,7 +242,12 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   public changeChat() {
     this._view?.webview.postMessage({ type: "clear-chat" });
     let history = chatHistory.getOpenedChat();
-    this._view?.webview.postMessage({ type: "history", value: history });
+    let chatName = chatHistory.getChatName();
+    this._view?.webview.postMessage({ type: "history", value: {history, chatName} });
+  }
+
+  public editChatName(){
+    this._view?.webview.postMessage({ type: "edit-name"});
   }
 
   async _getHtmlForWebview(webview: vscode.Webview) {

@@ -40,3 +40,7 @@ function getChatListAsQuickPickItems():vscode.QuickPickItem[]{
 
     return chatListItems;
 }
+
+export function editChatName(webview: webview.CodingBuddyViewProvider) {
+    webview.editChatName();
+}

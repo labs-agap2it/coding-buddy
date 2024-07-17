@@ -59,10 +59,27 @@ document.getElementById('send-button').addEventListener('click', ()=>{
     messageBox.value = '';
 });
 
+document.getElementById('chatName-input').addEventListener('keypress', (e)=>{
+    if(e.key === 'Enter'){
+        document.getElementById('edit-chatName').click();
+    }
+});
+
 document.getElementById('message-box').addEventListener('keypress', (e)=>{
     if(e.key === 'Enter'){
         document.getElementById('send-button').click();
     }
+});
+
+document.getElementById('edit-chatName').addEventListener('click', ()=> {
+    let nameBox = document.getElementById('chatName-input');
+    if(!nameBox.value){ return; }
+    let newChatName = nameBox.value;
+    nameBox.value = "";
+    nameBox.placeholder = newChatName;
+    vscode.postMessage({type:'chat-name-edited', value: newChatName});
+
+    toggleNameChangeBox();
 });
 
 window.addEventListener('keydown', (e)=>{
@@ -93,10 +110,15 @@ window.addEventListener('message', event =>{
             showFoundFiles(foundFiles);
         break;
         case 'history':
-            let messages = message.value;
+            console.log(1);
+            let messages = message.value.history;
+            let chatName = message.value.chatName;
+            document.getElementById('chatName-input').placeholder = chatName;
+            console.log(message.value);
             if(messages === undefined){
                 return;
             }
+
             messages.forEach(element =>{
                 addNewChatBox(element.userMessage, true);
                 processLLMResponse(vscode, element.llmResponse);
@@ -108,9 +130,12 @@ window.addEventListener('message', event =>{
             }
         break;
         case 'clear-chat':
-            document.getElementById('chat-container').innerHTML = '';
+            removeMessages();
             document.getElementById('message-box').disabled = false;
         break;
+        case 'edit-name':
+            toggleNameChangeBox();
+            break;
         case 'error':
             toggleLoader();
             document.getElementById('message-box').disabled = false;
@@ -125,6 +150,12 @@ window.addEventListener('message', event =>{
     }
 });
 }());
+
+function removeMessages(){
+    let chatNameBox = document.getElementById('chatNameBox');
+    document.getElementById('chat-container').innerHTML = "";
+    document.getElementById('chat-container').appendChild(chatNameBox);
+}
 
 function processLLMResponse(vscode, response){
     if(response.intent === 'fix' || response.intent === 'generate'){
@@ -409,6 +440,10 @@ function createChangeBox(vscode, message, filePath, pending, wasAccepted, change
         document.querySelector('#info-container').classList.add('hidden');
         document.querySelector('#info-container').innerHTML = '';
     }
+}
+
+function toggleNameChangeBox(){
+    document.getElementById('chatNameBox').classList.toggle('hidden');
 }
 
 function acceptChanges(vscode,changeID){
