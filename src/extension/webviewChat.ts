@@ -36,8 +36,14 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
         this.handleLLMAdditionalInfo(message, content);
       }else{
         this.infoHistory = [];
+        let openedFile = vscode.window.activeTextEditor?.document.uri.toString();
         if(content.intent === "generate" || content.intent === "fix"){
           await this.handleChangesOnEditor(content);
+        }
+        if(openedFile){
+          vscode.workspace.openTextDocument(vscode.Uri.parse(openedFile)).then((document)=>{
+            vscode.window.showTextDocument(document);
+          });
         }
         this._view?.webview.postMessage({ type: "llm-response", value: content });
         chatHistory.saveChat(message, response.content as llmResponse);
@@ -113,10 +119,53 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
       webviewView.webview
     );
 
+    let openedFile = vscode.window.activeTextEditor?.document.uri.toString();
+
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
+        case "accept-all-changes":
+          console.log(data.value);
+          let acceptedResponse = data.value as llmCode[];
+          console.log(acceptedResponse);
+          openedFile = vscode.window.activeTextEditor?.document.uri.toString();
+          for(let i=0; i<acceptedResponse.length; i++){
+            if(acceptedResponse[i].hasPendingChanges){
+              await userEditor.handleChangesOnEditor(
+                acceptedResponse[i].changeID, //changeID
+                true, //wasAccepted
+                this.codeArray //codeArray
+              );
+            }
+          }
+          
+          if(openedFile){
+            vscode.workspace.openTextDocument(vscode.Uri.parse(openedFile)).then((document)=>{
+              vscode.window.showTextDocument(document);
+            });
+          }
+          this.changeChat();
+        break;
+        case "decline-all-changes":
+          let declinedResponse = data.value as llmCode[];
+          openedFile = vscode.window.activeTextEditor?.document.uri.toString();
+          for(let i=0; i< declinedResponse.length; i++){
+            if(declinedResponse[i].hasPendingChanges){
+              await userEditor.handleChangesOnEditor(
+                declinedResponse[i].changeID, //changeID
+                false, //wasAccepted
+                this.codeArray //codeArray
+              );
+            }
+          }
+          if(openedFile){
+            vscode.workspace.openTextDocument(vscode.Uri.parse(openedFile)).then((document)=>{
+              vscode.window.showTextDocument(document);
+            });
+          }
+          this.changeChat();
+        break;
         case "accept-changes":
-          userEditor.handleChangesOnEditor(
+          await userEditor.handleChangesOnEditor(
             data.value, //changeID
             true, //wasAccepted
             this.codeArray //codeArray

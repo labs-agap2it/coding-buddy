@@ -109,6 +109,7 @@ window.addEventListener('message', event =>{
         break;
         case 'clear-chat':
             document.getElementById('chat-container').innerHTML = '';
+            document.getElementById('message-box').disabled = false;
         break;
         case 'error':
             toggleLoader();
@@ -171,7 +172,7 @@ function createMultipleChangeBox(vscode, response){
 
     let dropdownWrapper = document.createElement('div');
     dropdownWrapper.className = 'dropdown-wrapper';
-
+    let pendingChanges = false;
     for(let i = 0; i < responseCode.length; i++){
         let change = responseCode[i];
         let dropdown = document.createElement('div');
@@ -254,6 +255,7 @@ function createMultipleChangeBox(vscode, response){
         content.appendChild(explanation);
         if(change.hasPendingChanges){
             content.appendChild(buttonContainer);
+            pendingChanges = true;
         }
 
         dropdown.appendChild(header);
@@ -263,12 +265,39 @@ function createMultipleChangeBox(vscode, response){
 
         
         dropdownWrapper.appendChild(dropdown);
-        if(i !== responseCode.length - 1){
+        if(i !== responseCode.length - 1)
+            {
             dropdownWrapper.appendChild(divider);
         }
     }
 
+    let globalButtonContainer = document.createElement('div');
+    globalButtonContainer.className = 'button-container all-changes';
+    let acceptAllButton = document.createElement('button');
+    acceptAllButton.className = 'accept-button';
+    acceptAllButton.innerHTML = 'Accept All';
+    acceptAllButton.onclick = function(){ 
+        vscode.postMessage({type: 'accept-all-changes', value: responseCode});
+        document.getElementById('message-box').disabled = false;
+    };
+    let declineAllButton = document.createElement('button');
+    declineAllButton.className = 'decline-button';
+    declineAllButton.innerHTML = 'Decline All';
+    declineAllButton.onclick = function(){ 
+        vscode.postMessage({type: 'decline-all-changes', value: responseCode});
+        document.getElementById('message-box').disabled = false;
+    };
+    globalButtonContainer.appendChild(declineAllButton);
+    globalButtonContainer.appendChild(acceptAllButton);
+
+    let divider2 = divider1.cloneNode(true);
     changeWrapper.appendChild(dropdownWrapper);
+    
+    if(pendingChanges){
+        changeWrapper.appendChild(divider2);
+        changeWrapper.appendChild(globalButtonContainer);
+    }
+
     document.getElementById('chat-container').appendChild(changeWrapper);
     if(document.querySelector('#info-container').innerHTML !== ''){
         document.querySelector('#info-container').classList.add('hidden');

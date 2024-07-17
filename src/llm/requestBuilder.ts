@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import * as vscode from 'vscode';
 import * as editorUtils from "../editor/userEditor";
 import * as chatHistory from "../tempManagement/chatHistory";
 import { Message } from "../model/chatModel";
@@ -6,6 +7,7 @@ import { codeExamples, jsonFormat, rulesets } from "./directives";
 
 export async function buildMessages(userMessage:string, additionalInfo?:string[]):Promise<OpenAI.Chat.Completions.ChatCompletionMessageParam[]> {
     let userCode = editorUtils.getUserCode();
+    console.log(userCode);
     let messages:OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
             role: "system",
@@ -13,6 +15,7 @@ export async function buildMessages(userMessage:string, additionalInfo?:string[]
         }
     ];
 
+    let workspaceURI = vscode.workspace.getWorkspaceFolder;
     messages.push(
         {
             role: "system",
@@ -21,6 +24,10 @@ export async function buildMessages(userMessage:string, additionalInfo?:string[]
         {
             role: "system",
             content: codeExamples
+        },
+        {
+            role:'system',
+            content: "### Workspace URI### (" + workspaceURI + ")#"
         }
     );
 

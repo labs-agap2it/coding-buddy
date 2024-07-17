@@ -63,8 +63,11 @@ function defineHighlightDecoration(): vscode.TextEditorDecorationType{
 }
 
 async function changeTextOnEditor(change:llmChange, editor:vscode.TextEditor, previousCodeArray:string[]):Promise<vscode.Range>{
-    let start = new vscode.Position(change.lines.start -1 , 0);
-    let end = new vscode.Position(change.lines.end -1 , 0);
+    let start = new vscode.Position(0 , 0);
+    if(change.lines.start !== 0){
+        start = new vscode.Position(change.lines.start -1 , 0);
+    }
+    let end = new vscode.Position(change.lines.end, 0);
     if(change.isSingleLine){
         if(previousCodeArray.length < change.lines.start){
             end = new vscode.Position(change.lines.end -1, 0);
@@ -133,18 +136,16 @@ function verifyChangeOnWebview(webview:any, changeID:string){
     }
 }
 
-export function handleChangesOnEditor(changeID: any, wasAccepted: boolean, codeArray: any[]) {
+export async function handleChangesOnEditor(changeID: any, wasAccepted: boolean, codeArray: any[]) {
     let editor = vscode.window.activeTextEditor;
     if(!editor) {return;}
 
     let changeIndex = codeArray.findIndex((element:any)=> element.changeID === changeID);
+    let filePath = vscode.Uri.parse(codeArray[changeIndex].filePath.toString());
 
-    if(codeArray[changeIndex].filePath.toString() !== editor.document.uri.toString()){
-        vscode.workspace.openTextDocument(codeArray[changeIndex].filePath).then((document)=>{
-            vscode.window.showTextDocument(document);
-        });
-
-        editor = vscode.window.activeTextEditor!;
+    if(filePath.toString() !== editor.document.uri.toString()){
+        let document = await vscode.workspace.openTextDocument(filePath);
+        editor = await vscode.window.showTextDocument(document);
     }
 
     let editorCode = editor.document.getText();
@@ -154,7 +155,7 @@ export function handleChangesOnEditor(changeID: any, wasAccepted: boolean, codeA
         editorCode = codeArray[changeIndex].code;
     }
 
-    replaceCodeOnEditor(editorCode, codeArray[changeIndex].filePath);
+    await replaceCodeOnEditor(editorCode, codeArray[changeIndex].filePath);
     highlightDecoration.dispose();
 
     codeHistory.deleteCodeHistory(changeID);
