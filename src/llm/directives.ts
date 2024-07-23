@@ -69,6 +69,17 @@ A:{
     },
     "explanation": "",
     "intent": "fix"
+},
+Q:"Can you read my whole project?"
+A:{
+    "chat":"I'm sorry, but I can't help you with that.",
+    "code":[],
+    "additional_info":{
+        "keywords": [],
+        "language_declarations": []
+    },
+    "explanation": "",
+    "intent": "explain"
 }
 *** Examples End
 `;
@@ -87,6 +98,8 @@ export const rulesets =`
   In this case, you can read the user's currently opened file, which is delimited by "### OPEN FILE START" and "### OPEN FILE END". The code is formatted in "lineNumber: text" format, for your convenience, so you should ignore the line numbers when providing a response.
 
   When you receive code, the text you can see is always the whole file found on the user's codebase.
+
+  If the user's request is too complicated to provide an answer, you should refuse to comply. For example, reading the whole workspace.
 
   If the user's code does not suffice in order to answer, you may find answers (or tips) in other files. In these cases, you can ask for extra information, using the 'additional_info' and 'willNeedMoreInfo' fields.
   In this specific case, whenever you ask for additional information, keep in mind to send back all of the other fields as empty.
