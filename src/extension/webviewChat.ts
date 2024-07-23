@@ -7,7 +7,7 @@ import * as codeHistory from "../tempManagement/codeHistory";
 import { searchForKeywords } from "../fileSystem/fileSearch";
 import { prepareFilesForLLM } from "../fileSystem/fileReader";
 import { KeywordSearch } from "../model/keywordSearch";
-import { llmStatusEnum, llmResponse, llmMessage, llmChange, llmCode } from "../model/llmResponse";
+import { llmStatusEnum, llmResponse, llmMessage, llmCode } from "../model/llmResponse";
 import { Message } from "../model/chatModel";
 
 export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
@@ -205,6 +205,9 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
           let newName = data.value;
           chatHistory.changeChatName(newName);
         break;
+        case "chat-deletion-requested":
+          chatHistory.deleteChat();
+          this.changeChat();
       }
     });
   }
@@ -244,6 +247,10 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     let history = chatHistory.getOpenedChat();
     let chatName = chatHistory.getChatName();
     this._view?.webview.postMessage({ type: "history", value: {history, chatName} });
+  }
+
+  public toggleChatDeletion(){
+    this._view?.webview.postMessage({type: "toggle-chat-deletion"});
   }
 
   public editChatName(){

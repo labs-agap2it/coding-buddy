@@ -77,9 +77,18 @@ document.getElementById('edit-chatName').addEventListener('click', ()=> {
     let newChatName = nameBox.value;
     nameBox.value = "";
     nameBox.placeholder = newChatName;
+    document.getElementById('deletion-label').innerHTML = "Are you sure you want to delete chat " + newChatName + "?";
     vscode.postMessage({type:'chat-name-edited', value: newChatName});
 
     toggleNameChangeBox();
+});
+
+document.getElementById('confirm-deletion').addEventListener('click', ()=>{
+    vscode.postMessage({type: "chat-deletion-requested"});
+    toggleChatDeleteBox();
+} );
+document.getElementById('deny-deletion').addEventListener('click', ()=>{
+    toggleChatDeleteBox();
 });
 
 window.addEventListener('keydown', (e)=>{
@@ -114,6 +123,7 @@ window.addEventListener('message', event =>{
             let messages = message.value.history;
             let chatName = message.value.chatName;
             document.getElementById('chatName-input').placeholder = chatName;
+            document.getElementById('deletion-label').innerHTML = "Are you sure you want to delete chat " + chatName + "?";
             console.log(message.value);
             if(messages === undefined){
                 return;
@@ -130,8 +140,13 @@ window.addEventListener('message', event =>{
             }
         break;
         case 'clear-chat':
+            let loader = document.getElementById('message-loader');
+            if(!loader.classList.contains('hidden')){
+                toggleLoader();
+            }
             removeMessages();
             document.getElementById('message-box').disabled = false;
+            
         break;
         case 'edit-name':
             toggleNameChangeBox();
@@ -140,6 +155,9 @@ window.addEventListener('message', event =>{
             toggleLoader();
             document.getElementById('message-box').disabled = false;
             addNewChatBox("There was an error processing your request. Please try again!", false);
+        break;
+        case 'toggle-chat-deletion':
+            toggleChatDeleteBox();
         break;
         default:
             if(document.getElementById('message-loader').classList.contains('hidden')){
@@ -153,7 +171,9 @@ window.addEventListener('message', event =>{
 
 function removeMessages(){
     let chatNameBox = document.getElementById('chatNameBox');
+    let chatDeletionBox = document.getElementById('chat-deletion');
     document.getElementById('chat-container').innerHTML = "";
+    document.getElementById('chat-container').appendChild(chatDeletionBox);
     document.getElementById('chat-container').appendChild(chatNameBox);
 }
 
@@ -442,8 +462,19 @@ function createChangeBox(vscode, message, filePath, pending, wasAccepted, change
     }
 }
 
+function toggleChatDeleteBox(){
+    document.getElementById('chat-deletion').classList.toggle('hidden');
+    let nameChange = document.getElementById('chatNameBox');
+    if(!nameChange.classList.contains('hidden')){
+        nameChange.classList.toggle('hidden');
+    }
+}
 function toggleNameChangeBox(){
     document.getElementById('chatNameBox').classList.toggle('hidden');
+    let deleteChat = document.getElementById('chat-deletion');
+    if(!deleteChat.classList.contains('hidden')){
+        deleteChat.classList.add('hidden');
+    }
 }
 
 function acceptChanges(vscode,changeID){

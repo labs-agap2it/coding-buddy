@@ -1,6 +1,19 @@
 <body>
     <div class="container">
         <div class="chatbox" id="chat-container">
+            <div id="chat-deletion" class="chat-deletion-container hidden">
+                <div class="chat-deletion-wrapper">
+                    <p id="deletion-label">Are you sure you want to delete chat ?</p>
+                    <div class="deletion-button-wrapper">
+                        <button id="confirm-deletion" class="delete-button button-confirm" >
+                            Yes
+                        </button>
+                        <button id="deny-deletion" class="delete-button button-deny">
+                            No
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div id="chatNameBox" class="chatName-box hidden">
                 <div class="chatName-wrapper">
                     <input type="text" id="chatName-input" class="chatName-input">

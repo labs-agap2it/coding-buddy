@@ -19,16 +19,7 @@ export function changeChat(webview:webview.CodingBuddyViewProvider){
 }
 
 export function deleteChat(webview:webview.CodingBuddyViewProvider){
-    let openedChat = chatHistory.getChatList();
-    vscode.window.showInformationMessage(
-        "Delete " + openedChat[chatHistory.getChatIndex()].title + "?",
-         "Yes", "No"
-    ).then((value) => {
-        if(value === "Yes"){
-            chatHistory.deleteChat();
-            webview.changeChat();
-        }
-    });
+    webview.toggleChatDeletion();
 }
 
 function getChatListAsQuickPickItems():vscode.QuickPickItem[]{
