@@ -59,6 +59,27 @@ document.getElementById('send-button').addEventListener('click', ()=>{
     messageBox.value = '';
 });
 
+document.getElementById('messageBoxHover').addEventListener('mouseenter', ()=>{
+    let messageBox = document.getElementById('message-box');
+    let hoverMessage = document.getElementById('hoverMessage');
+    if(messageBox.disabled === true){
+
+        if(!document.getElementById('message-loader').classList.contains('hidden')){
+            hoverMessage.innerHTML = "Please wait for Coding Buddy's answer before sending another one.";
+        }else
+        {
+            hoverMessage.innerHTML = "You still have pending changes! Please handle them before sending another message.";
+        }
+        hoverMessage.style.display = "block";
+    }else{
+        hoverMessage.style.display = "none";
+    }
+});
+
+document.getElementById('messageBoxHover').addEventListener('mouseleave', ()=>{
+    document.getElementById('hoverMessage').style.display = "none";
+});
+
 document.getElementById('chatName-input').addEventListener('keypress', (e)=>{
     if(e.key === 'Enter'){
         document.getElementById('edit-chatName').click();
