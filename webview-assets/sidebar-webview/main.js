@@ -11,6 +11,17 @@ window.addEventListener('message', event =>{
 function toggleLoader(){
     let loader = document.getElementById('message-loader');
     loader.classList.toggle('hidden');
+    if(loader.classList.contains("hidden")){
+        removeFileDecorations();
+    }
+}
+
+function removeFileDecorations(){
+    let fileDecorationWrapper = document.getElementById("info-container");
+    fileDecorationWrapper.innerHTML = "";
+    if(!fileDecorationWrapper.classList.contains("hidden")){
+        fileDecorationWrapper.classList.add("hidden");
+    }
 }
 
 function addNewChatBox(message, isUser){

@@ -2,7 +2,6 @@ import OpenAI from 'openai';
 import * as savedSettings from '../settings/savedSettings';
 import * as vscode from 'vscode';
 import {v4 as uuid} from 'uuid';
-import * as chatHistory from '../tempManagement/chatHistory';
 import { buildMessages } from "./requestBuilder";
 import { llmMessage, llmResponse, llmStatusEnum } from '../model/llmResponse';
 
@@ -14,15 +13,21 @@ export async function getLLMJson(message:string, additionalInfo?:string[]):Promi
     if(!apiKey || apiKey === undefined ){ return {status: llmStatusEnum.noApiKey}; }
     openai = new OpenAI({apiKey});
     let llmMessages = await buildMessages(message, additionalInfo);
-    const completion = await openai.chat.completions.create({
-        model: userModel,
-        response_format:{
-            "type":"json_object"
-        },
-        top_p:0.4,
-        messages: llmMessages
-    });
-    if(!completion.choices[0].message.content){ return {status: llmStatusEnum.noResponse};}
+    let completion;
+    try{
+        completion = await openai.chat.completions.create({
+            model: userModel,
+            response_format:{
+                "type":"json_object"
+            },
+            top_p:0.4,
+            messages: llmMessages
+        });
+        if(!completion.choices[0].message.content){ return {status: llmStatusEnum.noResponse};}
+    }catch(e){
+        vscode.window.showErrorMessage("Error! " + e);
+        return{status: llmStatusEnum.error};
+    }
     let response:llmResponse = JSON.parse(completion.choices[0].message.content);
     for (let i = 0; i < response.code.length; i++) {
         response.code[i].changeID = generateChangeID();
