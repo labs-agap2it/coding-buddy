@@ -74,7 +74,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     let editor = vscode.window.activeTextEditor;
     if(!editor){return;}
 
-    let filePath = vscode.Uri.parse(code.file.toString());
+    let filePath = code.file;
 
     if(filePath.toString() !== editor.document.uri.toString()){
       let document = await vscode.workspace.openTextDocument(filePath);
@@ -95,7 +95,8 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     }else{
       for(let i = response.code.length -1; i >= 0; i--){
         let element = response.code[i];
-        await userEditor.insertSnippetsOnEditor(element.changes, element.changeID, element.file.toString());
+        let filepath = element.file.toString();
+        await userEditor.insertSnippetsOnEditor(element.changes, element.changeID, filepath);
         this.codeArray = codeHistory.getCodeHistory();
         if(element === response.code[0]){
           userEditor.checkForUserInputOnEditor(this, element.changeID, this.codeArray);

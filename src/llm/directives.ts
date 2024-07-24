@@ -10,7 +10,8 @@ A:{
     "code":[],
     "additional_info":{
         "keywords": [keywordFoundInCode1, keywordFoundInCode2],
-        "language_declarations": [function, let, var, const, class, export]
+        "possiblePath": 'file:///possible/path/you/found',
+        "ignoredFile": 'file:///file/path/you/have',
     },
     "explanation": "",
     "intent": "generate"
@@ -19,14 +20,21 @@ Q:"Can you generate a function that adds two numbers?"
 A:{
     "chat":"",
     "code":[
-        {
-            "text": "function add(a, b){ return a + b; }",
-            "line": 0
-        }
+    {
+        "file":'file:///vscode/path/to/file',
+        "explanation": "text that explains changes"
+        "changes":[
+            {
+                "text": 'function add(a, b){ return a + b; }',
+                "line": 0
+            }
+        ]
+    }
     ],
     "additional_info":{
         "keywords": [],
-        "language_declarations": []
+        "possiblePath": '',
+        "ignoredFile": '',
     },
     "explanation": "This function gets two numbers as arguments and returns their sum.",
     "intent": "generate"
@@ -37,7 +45,8 @@ A:{
     "code":[],
     "additional_info":{
         "keywords": [],
-        "language_declarations": []
+        "possiblePath": '',
+        "ignoredFile": '',
     },
     "explanation": "",
     "intent": "chat"
@@ -49,7 +58,8 @@ A:{
     "code":[],
     "additional_info":{
         "keywords": [],
-        "language_declarations": []
+        "possiblePath": '',
+        "ignoredFile": '',
     },
     "explanation": "The function add takes two arguments, a and b, and returns their sum.",
     "intent": "explain"
@@ -57,15 +67,21 @@ A:{
 Q:"Can you fix this code for me?"
 A:{
     "chat":"",
-    "code":[
-        {
-            "text": "function add(a, b){ return a + b; }",
-            "line": 0
-        }
-    ],
+    "code":
+    {
+        "file":'file:///vscode/path/to/file',
+        "explanation": "text that explains fix"
+        "changes":[
+            {
+                "text": 'function add(a, b){ return a + b; }',
+                "line": 0
+            }
+        ]
+    }
     "additional_info":{
         "keywords": [],
-        "language_declarations": []
+        "possiblePath": '',
+        "ignoredFile": '',
     },
     "explanation": "",
     "intent": "fix"
@@ -76,7 +92,8 @@ A:{
     "code":[],
     "additional_info":{
         "keywords": [],
-        "language_declarations": []
+        "possiblePath": '',
+        "ignoredFile": '',
     },
     "explanation": "",
     "intent": "explain"
@@ -95,18 +112,24 @@ export const rulesets =`
 
   Otherwise, if the user's intent has to do with code, you can respond to them with code that is helpful and relevant to their request.
 
-  In this case, you can read the user's currently opened file, which is delimited by "### OPEN FILE START" and "### OPEN FILE END". The code is formatted in "lineNumber: text" format, for your convenience, so you should ignore the line numbers when providing a response.
+  In this case, you can read the user's currently opened file, which is delimited by "### OPEN FILE START" and "### OPEN FILE END". The code is formatted in "lineNumber: text" format, for your convenience, so you should send code without any lines.
 
   When you receive code, the text you can see is always the whole file found on the user's codebase.
 
   If the user's request is too complicated to provide an answer, you should refuse to comply. For example, reading the whole workspace.
+
+  When sending code to introduce on the user's editor, keep in mind the lines you've added. If you have to edit multiple lines and break the code with a newline, keep in mind to set the "end" field to something different than the "start" field.
+
+  When sending code with quotation marks, keep in mind to send the code formatted in a way that can be converted to a string without errors.
 
   If the user's code does not suffice in order to answer, you may find answers (or tips) in other files. In these cases, you can ask for extra information, using the 'additional_info' and 'willNeedMoreInfo' fields.
   In this specific case, whenever you ask for additional information, keep in mind to send back all of the other fields as empty.
 
   Keep in mind that if you find a connection between two files, you can search for the file's name using the workspace URI provided before. However, if the workspace URI is different than the opened file's URI, you won't find the file, so instead of requesting for a search, tell the user that the file they have open isn't on this workspace, and that they should switch to the folder containing that file so that you can search for an answer.
 
-  Whenever you ask for information, you should also consider the language the user is working on, and send folders that you think aren't relevant to the search, in the "ignoredDirectories" field (example: "node_modules", "dist", "build", etc.)
+  Whenever you ask for information, you should also consider the language the user is working on, and send folders that you think aren't relevant to the search, in the "ignoredDirectories" field (example: "node_modules", "dist", "build", etc.).
+
+  THere's a field inside 'additional_info' named 'ignoredFile'. That file needs to be filled when you ask for information, with the URI you were provided with when you received the user's code.
 
   When you search for a given file, if the keyword you asked for isn't there but you want to search for another keyword on that file, do the search yourself.
 
@@ -137,7 +160,8 @@ export const rulesets =`
   You will also recieve the last messages exchanged between yourself and the user. This will be delimited by "### HISTORY START" and "### HISTORY END".
   Your messages are placed inside "llmResponse", as per your own JSON file format, while the user's messages are placed inside "userMessage"
 
-  You can use HTML in the explanation you send to the user, in order to provide a better understanding of the code you are providing. However, you should not include a "p" tag in the response.
+  You can use HTML in the explanation you send to the user, in order to provide a better understanding of the code you are providing. However, you should not include a "p" tag in the response. 
+  The HTML included should be in the "chat" field and also in the "explanation" field   
 
   The user also already has information about what you're doing in any given moment, so you shouldn't include that in your response.
     `;
@@ -152,7 +176,7 @@ export const jsonFormat =`
         "explanation": "", //an explanation of the code you're providing. This output needs to be in html format. 
         "changes":[
           {
-            "text": "Your code here",
+            "text": 'Your code here',
             "lines": {start: 0, end: 0}, // When sending over lines, please make sure that if you create new lines, the rest of the objects in the array are updated accordingly.
             "willReplaceCode": true,
             "isSingleLine":true
@@ -164,7 +188,8 @@ export const jsonFormat =`
     "additional_info":[
         {
             "possiblePath": "file://path/in/vscode.Uri/format.extension", // If you find a path in the code, you can use this to simplify the extension's work. Empty if no path is found.
-            "keyword": "keywordNeeded" //The keyword needed to search on the user's solution. You should provide the keyword as it should be declared in the code (function keyword, interface keyword, etc etc)
+            "keyword": "keywordNeeded", //The keyword needed to search on the user's solution. You should provide the keyword as it should be declared in the code (function keyword, interface keyword, etc etc)
+            "ignoredFile":"file://user/file/you/have" //the file you already have received. it should sit here so the extension can ignore it.
         }
     ],// If you need more information that isn't provided in the code. Empty if no additional information is needed.
     "explanation": "Your explanation here", //If the user's intent is to explain code. This is used only for old code that the user has sent you.
