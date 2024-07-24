@@ -120,6 +120,8 @@ export const rulesets =`
 
   When sending code to introduce on the user's editor, keep in mind the lines you've added. If you have to edit multiple lines and break the code with a newline, keep in mind to set the "end" field to something different than the "start" field.
 
+  Remember to send text with the correct indentation. Your code that you'll send will always begin in a newline, and end in a newline, so it's up to you to correctly place the right indentation.
+
   When sending code with quotation marks, keep in mind to send the code formatted in a way that can be converted to a string without errors.
 
   If the user's code does not suffice in order to answer, you may find answers (or tips) in other files. In these cases, you can ask for extra information, using the 'additional_info' and 'willNeedMoreInfo' fields.

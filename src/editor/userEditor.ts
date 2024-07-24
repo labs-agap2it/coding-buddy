@@ -37,7 +37,7 @@ export async function insertSnippetsOnEditor(changeList: llmChange[], changeID: 
     let previousCodeArray = previousCode.split(/\r\n|\r|\n/);
     let decorationList: vscode.DecorationOptions[] = [];
 
-    for(let i = 0; i < changeList.length; i++){
+    for(let i = changeList.length - 1; i >= 0; i--){
         let decorationRange = await changeTextOnEditor(changeList[i], editor, previousCodeArray);
         decorationList.push(showDecorationsOnEditor(decorationRange, changeList[i], previousCodeArray));
     };
@@ -65,7 +65,13 @@ function defineHighlightDecoration(): vscode.TextEditorDecorationType{
 async function changeTextOnEditor(change:llmChange, editor:vscode.TextEditor, previousCodeArray:string[]):Promise<vscode.Range>{
     let start = new vscode.Position(0 , 0);
     if(change.lines.start !== 0){
-        start = new vscode.Position(change.lines.start -1 , 0);
+        let character = 0;
+        if(!change.willReplaceCode && previousCodeArray[change.lines.start -1] !== ""){
+            if(previousCodeArray[change.lines.start -1] !== undefined){
+                character = previousCodeArray[change.lines.start -1].length + 1;
+            }
+        }
+        start = new vscode.Position(change.lines.start -1, character);
     }
     let end = new vscode.Position(change.lines.end, 0);
     if(change.isSingleLine){
@@ -90,7 +96,7 @@ async function changeTextOnEditor(change:llmChange, editor:vscode.TextEditor, pr
         if(!change.willReplaceCode && lineText !== ""){
             change.text += "\n";
         }
-        editBuilder.insert(start, change.text);
+        editBuilder.insert(start, "\n" + change.text);
     });
     let changeArray = change.text.split(/\r\n|\r|\n/);
     end = new vscode.Position(start.line + changeArray.length - 1, changeArray[changeArray.length - 1].length);
