@@ -154,6 +154,7 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
+    "handlebars": "^4.7.8",
     "openai": "^4.33.0",
     "uuid": "^10.0.0"
   }

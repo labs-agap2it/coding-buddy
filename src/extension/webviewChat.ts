@@ -272,11 +272,18 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
         "chat.html"
       )
     );
-    const scriptUri = webview.asWebviewUri(
+    const mainjsUri = webview.asWebviewUri(
       vscode.Uri.joinPath(
         this._extensionUri,
         "webview-assets/sidebar-webview",
         "main.js"
+      )
+    );
+    const handlebarsjsUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        "webview-assets/libs",
+        "handlebars.min.js"
       )
     );
     const codiconsUri = webview.asWebviewUri(
@@ -289,13 +296,14 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
       )
     );
 
-    const nonce = getNonce();
+    const mainNonce = getNonce();
+    const handleBarsNonce = getNonce();
 
     const header = `<!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
-      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https://*; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';style-src ${webview.cspSource}">
+      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https://*; font-src ${webview.cspSource}; script-src 'nonce-${mainNonce}' 'unsafe-eval'; style-src ${webview.cspSource}">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link href="${codiconsUri}" rel="stylesheet">
       <link href="${styleUri}" rel="stylesheet">
@@ -303,7 +311,10 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
       <title>Coding Buddy Chat</title>
     </head>`;
 
-    const scriptLoad = `<script nonce="${nonce}" src="${scriptUri}"></script>
+    const scriptLoad = `
+    <script nonce="${mainNonce}" src="${handlebarsjsUri}"></script>
+    <script nonce="${mainNonce}" src="${mainjsUri}"></script>
+    
     </body>
     </html>`;
     return header + htmlUri.toString() + scriptLoad;

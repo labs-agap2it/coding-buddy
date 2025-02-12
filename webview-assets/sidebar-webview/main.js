@@ -1,3 +1,10 @@
+
+
+// compile the template
+const template = Handlebars.compile("Handlebars <b>{{doesWhat}}</b>");
+// execute the compiled template and print the output to the console
+console.log(template({ doesWhat: "rocks!" }));
+
 //displayable message handling
 window.addEventListener('message', event =>{
     const message = event.data;

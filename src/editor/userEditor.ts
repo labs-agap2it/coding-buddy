@@ -3,6 +3,7 @@ import * as chatHistory from '../tempManagement/chatHistory';
 import * as codeHistory from '../tempManagement/codeHistory';
 import { llmChange } from '../model/llmResponse';
 
+
 export function getUserCode():string{
     let code = vscode.window.activeTextEditor?.document.getText() || "";
     let lines = code.split(/\r\n|\r|\n/);
