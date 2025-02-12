@@ -28,6 +28,7 @@ async function searchForKeywordInFile(additionalInfo:llmAdditionalInfo, ignoredD
     console.log(additionalInfo);
     let keyword = additionalInfo.keyword;
     let possiblePath = additionalInfo.possiblePath;
+    let ignoredFile = additionalInfo.ignoredFile;
     let searchResult:KeywordSearch | undefined = undefined;
     let workspacePath = vscode.workspace.workspaceFolders?.[0].uri;
     if(possiblePath){
@@ -50,7 +51,7 @@ async function searchForKeywordInFile(additionalInfo:llmAdditionalInfo, ignoredD
             return searchResult;
     }else{
         if(!workspacePath){return undefined;}
-        let file = await searchLayer(keyword, workspacePath, ignoredDirectories);
+        let file = await searchLayer(keyword, workspacePath, ignoredDirectories, ignoredFile);
         if(file){
             searchResult = {
                 keyword: keyword,
@@ -73,15 +74,19 @@ async function searchforKeywordInPath(keyword:string, possiblePath:vscode.Uri): 
 }
 
 
-async function searchLayer(keyword:string, layer:vscode.Uri, ignoredDirectories:string[]):Promise<vscode.Uri | undefined>{
+async function searchLayer(keyword:string, layer:vscode.Uri, ignoredDirectories:string[], ignoredFile:vscode.Uri):Promise<vscode.Uri | undefined>{
     let sortedQueue = await splitFilesAndDirectoriesOnURI(layer);
     let queue = sortedQueue.files;
     let directories = sortedQueue.directories;
     if(queue.length >= 1){
         for(let i= 0; i < queue.length; i++){
-            let file = await searchFile(keyword, queue[i]);
-            if(file){
-                return queue[i];
+            if(queue[i].toString() !== ignoredFile.toString()){
+                let file = await searchFile(keyword, queue[i]);
+                if(file){
+                    return queue[i];
+                }
+            }else{
+                console.log("conflict found");
             }
         }
     }
@@ -89,7 +94,7 @@ async function searchLayer(keyword:string, layer:vscode.Uri, ignoredDirectories:
         for(let i = 0; i < directories.length; i++){
             let directory = directories[i];
             if(!willIgnoreDirectory(directory, ignoredDirectories)){
-                let file = await searchLayer(keyword, directory, ignoredDirectories);
+                let file = await searchLayer(keyword, directory, ignoredDirectories, ignoredFile);
                 if(file){
                     return file;
                 }

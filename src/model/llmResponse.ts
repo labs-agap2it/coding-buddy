@@ -40,5 +40,6 @@ export interface llmChange{
 
 export interface llmAdditionalInfo{
     possiblePath:vscode.Uri,
-    keyword:string
+    keyword:string,
+    ignoredFile:vscode.Uri
 }

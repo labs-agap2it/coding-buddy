@@ -14,6 +14,7 @@ export async function getLLMJson(message:string, additionalInfo?:string[]):Promi
     openai = new OpenAI({apiKey});
     let llmMessages = await buildMessages(message, additionalInfo);
     let completion;
+    let response;
     try{
         completion = await openai.chat.completions.create({
             model: userModel,
@@ -24,11 +25,11 @@ export async function getLLMJson(message:string, additionalInfo?:string[]):Promi
             messages: llmMessages
         });
         if(!completion.choices[0].message.content){ return {status: llmStatusEnum.noResponse};}
+        response = JSON.parse(completion.choices[0].message.content);
     }catch(e){
         vscode.window.showErrorMessage("Error! " + e);
         return{status: llmStatusEnum.error};
     }
-    let response:llmResponse = JSON.parse(completion.choices[0].message.content);
     for (let i = 0; i < response.code.length; i++) {
         response.code[i].changeID = generateChangeID();
         response.code[i].hasPendingChanges = true;
