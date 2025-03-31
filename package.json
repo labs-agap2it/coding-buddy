@@ -27,7 +27,10 @@
             "enum": [
               "gpt-3.5-turbo",
               "gpt-4-turbo",
-              "gpt-4o"
+              "gpt-4o",
+              "gpt-4o-mini",
+              "gpt-o3-mini",
+              "gpt-01"
             ],
             "description": "OpenAI model for Coding Buddy to use. The extension was tested with all models, but it is recommended to use gpt-4-turbo for better results."
           },
@@ -142,7 +145,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
-    "@types/node": "18.x",
+    "@types/node": "^22.13.4",
     "@types/uuid": "^9.0.8",
     "@types/vscode": "^1.88.0",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
@@ -150,11 +153,27 @@
     "@vscode/test-cli": "^0.0.8",
     "@vscode/test-electron": "^2.3.9",
     "eslint": "^8.57.0",
-    "typescript": "^5.3.3"
+    "svelte": "^5.20.2",
+    "svelte-loader": "^3.2.4",
+    "svelte-preprocess": "^6.0.3",
+    "ts-loader": "^9.5.2",
+    "typescript": "5.4"
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
+    "async-mutex": "^0.5.0",
+    "ignore": "^7.0.3",
     "openai": "^4.33.0",
-    "uuid": "^10.0.0"
+    "sqlite3": "^5.1.7",
+    "tree-sitter": "^0.22.4",
+    "tree-sitter-c-sharp": "^0.23.1",
+    "tree-sitter-cpp": "^0.23.4",
+    "tree-sitter-java": "^0.23.5",
+    "tree-sitter-javascript": "^0.23.1",
+    "tree-sitter-python": "^0.23.6",
+    "uuid": "^10.0.0",
+    "vectra": "^0.9.0",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
   }
 }

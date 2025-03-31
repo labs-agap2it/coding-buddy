@@ -4,7 +4,7 @@ import * as chatService from './extension/chatService';
 import * as textChat from './extension/textChat';
 
 export function activate(context: vscode.ExtensionContext) {
-
+	console.log('Coding Buddy Activated');
 	const provider = new CodingBuddyViewProvider(context.extensionUri);
 
 	const codingBuddyWebviewProvider = vscode.window.registerWebviewViewProvider(

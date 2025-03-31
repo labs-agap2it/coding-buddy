@@ -1,87 +1,121 @@
 import OpenAI from "openai";
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 import * as editorUtils from "../editor/userEditor";
 import * as chatHistory from "../tempManagement/chatHistory";
 import { Message } from "../model/chatModel";
-import { codeExamples, jsonFormat, rulesets } from "./directives";
+import {
+  askMoreInformation,
+  codeExamples,
+  jsonFormat,
+  rulesets,
+} from "./directives";
+import vectraIndex from "../db/vectra";
+import { generateEmbedding } from "./embeddingConnection";
+import { llmAdditionalInfo } from "../model/llmResponse";
 
-export async function buildMessages(userMessage:string, additionalInfo?:string[]):Promise<OpenAI.Chat.Completions.ChatCompletionMessageParam[]> {
-    let userCode = editorUtils.getUserCode();
-    console.log(userCode);
-    let messages:OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-        {
-            role: "system",
-            content: rulesets
-        }
-    ];
+export async function buildMessages(
+  userMessage: string,
+  additionalInfo?: llmAdditionalInfo[]
+): Promise<OpenAI.Chat.Completions.ChatCompletionMessageParam[]> {
+  let userCode = editorUtils.getUserCode();
+  //console.log(userCode);
+  const userEmbedding = await generateEmbedding(userMessage, global.APIKEY!);
+  const context = await vectraIndex.queryItems(userEmbedding!, 3);
+  let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content: rulesets,
+    },
+  ];
 
-    let workspaceURI = vscode.workspace.getWorkspaceFolder;
-    messages.push(
-        {
-            role: "system",
-            content: jsonFormat
-        },
-        {
-            role: "system",
-            content: codeExamples
-        },
-        {
-            role:'system',
-            content: "### Workspace URI### (" + workspaceURI + ")#"
-        }
-    );
-
-    if(additionalInfo){
-        for(let i = 0; i < additionalInfo.length; i++){
-            messages.push(
-                {
-                    role: "system",
-                    content: additionalInfo[i]
-                }
-            );
-        }
+  let workspaceURI = vscode.workspace.getWorkspaceFolder;
+  messages.push(
+    {
+      role: "system",
+      content: jsonFormat,
+    },
+    {
+      role: "system",
+      content: codeExamples,
+    },
+    {
+      role: "system",
+      content: "### Workspace URI### (" + workspaceURI + ")#",
     }
+  );
 
-    let messageHistory = buildHistoryArray();
-    if(messageHistory.length > 0){
-        for(let i = 0; i < messageHistory.length; i++){
-            messages.push(messageHistory[i]);
-        }
+  context.map((item) => {
+    messages.push({
+      role: "system",
+      content: `###Context_Start
+                  fileUri: ${item.item.metadata.path}
+                  ##File_Content_Start
+                    ${item.item.metadata.content}
+                  ##File_Content_End
+                ###Context_End`,
+    });
+  });
+
+  if (additionalInfo) {
+    for (let i = 0; i < additionalInfo.length; i++) {
+      messages.push({
+        role: "system",
+        content: `##Search_Result_Start
+                    fileUri: "${additionalInfo[i].path}"
+                    ##Full_File_Content_Start
+                      ${additionalInfo[i].content}
+                    ##Full_File_Content_End
+                  ##Search_Result_End`,
+      });
     }
-    
+  }
 
-    messages.push(
-        {
-            role: "system",
-            content: userCode
-        },
-        {
-            role: "user",
-            content: userMessage
-        }
-    );
+  let messageHistory = buildHistoryArray();
+  if (messageHistory.length > 0) {
+    for (let i = 0; i < messageHistory.length; i++) {
+      messages.push(messageHistory[i]);
+    }
+  }
 
-    return messages;
+  messages.push({
+    role: "system",
+    content: userCode,
+  });
+
+  if (global.numberOfTries && global.numberOfTries >= 3) {
+    messages.push({
+      role: "system",
+      content: askMoreInformation,
+    });
+    global.numberOfTries = 0;
+  } else {
+    messages.push({
+      role: "user",
+      content: userMessage,
+    });
+  }
+  return messages;
 }
 
-function buildHistoryArray():OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
-    let openedChat:Message[] | undefined = chatHistory.getOpenedChat();
-    if(!openedChat || openedChat.length === 0) {
-        return [];
-    }
+function buildHistoryArray(): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
+  let openedChat: Message[] | undefined = chatHistory.getOpenedChat();
+  if (!openedChat || openedChat.length === 0) {
+    return [];
+  }
 
-    let messageHistory:OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
-    for(let i = 0; i<openedChat.length; i++){
-        messageHistory.push({
-            role: "user",
-            content: openedChat[i].userMessage
-        },
-        {
-            role: "assistant",
-            content: JSON.stringify(openedChat[i].llmResponse)
-        }
+  let messageHistory: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+  for (let i = 0; i < openedChat.length; i++) {
+    messageHistory.push(
+      {
+        role: "user",
+        content: openedChat[i].userMessage,
+      },
+      {
+        role: "assistant",
+        content: JSON.stringify(openedChat[i].llmResponse),
+      }
     );
-    }
+  }
 
-    return messageHistory;
+  return messageHistory;
 }

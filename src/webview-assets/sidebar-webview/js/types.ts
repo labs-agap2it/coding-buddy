@@ -1,23 +1,18 @@
 import * as vscode from "vscode";
 
-export enum llmStatusEnum {
-  success,
-  error,
-  noApiKey,
-  noResponse,
+export interface Message {
+  type: string;
+  value?: any;
 }
 
-export interface llmMessage {
-  status: llmStatusEnum;
-  content?: llmResponse;
+export interface VsCodeApi {
+  postMessage(message: Message): void;
 }
-
 export interface llmResponse {
   chat: string;
   code: llmCode[];
   willNeedMoreInfo: boolean;
   ignoredDirectories: string[];
-  promptForSearch: string;
   additional_info: llmAdditionalInfo[];
   explanation: string;
   intent: string;
@@ -40,6 +35,7 @@ export interface llmChange {
 }
 
 export interface llmAdditionalInfo {
-  path: string;
-  content: string;
+  possiblePath: vscode.Uri;
+  keyword: string;
+  ignoredFile: vscode.Uri;
 }
