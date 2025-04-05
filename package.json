@@ -46,23 +46,28 @@
       "view/title": [
         {
           "command": "coding-buddy.newChat",
-          "group": "navigation@0"
+          "group": "navigation@0",
+          "when": "view == coding-buddy.buddyWebview"
         },
         {
           "command": "coding-buddy.editChatName",
-          "group": "navigation@1"
+          "group": "navigation@1",
+          "when": "view == coding-buddy.buddyWebview"
         },
         {
           "command": "coding-buddy.changeChat",
-          "group": "navigation@2"
+          "group": "navigation@2",
+          "when": "view == coding-buddy.buddyWebview"
         },
         {
           "command": "coding-buddy.deleteChat",
-          "group": "navigation@3"
+          "group": "navigation@3",
+          "when": "view == coding-buddy.buddyWebview"
         },
         {
           "command": "coding-buddy.goToSettings",
-          "group": "navigation@4"
+          "group": "navigation@4",
+          "when": "view == coding-buddy.buddyWebview"
         }
       ]
     },

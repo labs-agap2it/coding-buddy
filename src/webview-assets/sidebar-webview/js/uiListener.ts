@@ -106,11 +106,27 @@ export function uiListeners(vscode: VsCodeApi) {
       return;
     }
     if (e.key === "Y" || e.key === "y") {
-      const acceptButton = document.querySelector(".accept-button") as HTMLButtonElement;
-      acceptButton.click() ;
+      const acceptButton = document.querySelector(
+        ".accept-button"
+      ) as HTMLButtonElement;
+      acceptButton.click();
     } else if (e.key === "N" || e.key === "n") {
-      const declineButton = document.querySelector(".decline-button") as HTMLButtonElement;
+      const declineButton = document.querySelector(
+        ".decline-button"
+      ) as HTMLButtonElement;
       declineButton.click();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    const target = (e.target as HTMLElement).closest("a");
+
+    if (target instanceof HTMLAnchorElement) {
+      e.preventDefault();
+      const href = target.getAttribute("href");
+
+      if (href) {
+        vscode.postMessage({ type: "go-to-file", value: href });
+      }
     }
   });
 }

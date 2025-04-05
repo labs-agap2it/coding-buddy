@@ -4,7 +4,7 @@ import * as editorUtils from "../editor/userEditor";
 import * as chatHistory from "../tempManagement/chatHistory";
 import { Message } from "../model/chatModel";
 import {
-  askMoreInformation,
+  stopAskingForInformation,
   codeExamples,
   jsonFormat,
   rulesets,
@@ -12,6 +12,7 @@ import {
 import vectraIndex from "../db/vectra";
 import { generateEmbedding } from "./embeddingConnection";
 import { llmAdditionalInfo } from "../model/llmResponse";
+import { getProjectId } from "../changeDetector/changeDetector";
 
 export async function buildMessages(
   userMessage: string,
@@ -20,7 +21,9 @@ export async function buildMessages(
   let userCode = editorUtils.getUserCode();
   //console.log(userCode);
   const userEmbedding = await generateEmbedding(userMessage, global.APIKEY!);
-  const context = await vectraIndex.queryItems(userEmbedding!, 3);
+  const context = await vectraIndex.queryItems(userEmbedding!, 3, {
+    projectId: { $eq: getProjectId() },
+  });
   let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     {
       role: "system",
@@ -85,7 +88,7 @@ export async function buildMessages(
   if (global.numberOfTries && global.numberOfTries >= 3) {
     messages.push({
       role: "system",
-      content: askMoreInformation,
+      content: stopAskingForInformation,
     });
     global.numberOfTries = 0;
   } else {

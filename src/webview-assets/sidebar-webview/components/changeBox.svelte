@@ -43,7 +43,7 @@
       </p>
     </div>
     <div class="divider"></div>
-    <p>{message}</p>
+    <p>{@html message}</p>
     {#if hasPendingChanges}
       <div class="divider"></div>
       <div class="button-container">

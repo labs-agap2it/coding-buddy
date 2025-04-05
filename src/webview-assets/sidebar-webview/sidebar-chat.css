@@ -1,370 +1,378 @@
 body {
-    padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
 }
 
-.container{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    height:100vh;
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
 }
 
-.input-box{
-    width:calc(100% - 2rem);
-    padding:1rem;
-    border-top:1px solid var(--vscode-activityBar-dropBorder);
+.input-box {
+  width: calc(100% - 2rem);
+  padding: 1rem;
+  border-top: 1px solid var(--vscode-activityBar-dropBorder);
 }
 
-.hidden{
-    display:none !important;
+.hidden {
+  display: none !important;
 }
 
-.state{
-    color: var(--vscode-disabledForeground);
+.state {
+  color: var(--vscode-disabledForeground);
 }
 
-.pointer{
-    cursor: pointer;
+.pointer {
+  cursor: pointer;
 }
 
 .info-container {
-    overflow-y: scroll;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    justify-content: center;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  justify-content: center;
 }
 
-.input-wrapper{
-    display:flex;
-    flex-direction:row;
-    align-items:center;
-    border:1px solid var(--vscode-activityBar-dropBorder);
-    border-radius:5px;
-    overflow:hidden;
+.input-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border: 1px solid var(--vscode-activityBar-dropBorder);
+  border-radius: 5px;
+  overflow: hidden;
 }
 
-.input-box input{
-    color:var(--vscode-foreground);
-    width:100%;
-    padding:0.5rem;
-    border:0;
-    background-color: var(--vscode-activityBar-background);
+.input-box input {
+  color: var(--vscode-foreground);
+  width: 100%;
+  padding: 0.5rem;
+  border: 0;
+  background-color: var(--vscode-activityBar-background);
 }
 
 .info-wrapper {
-    display: flex;
-    flex-direction: row;
-    padding: 0.5rem;
-    align-items:center;
-    gap:0.5rem;
-    border: 1px solid;
-    border-radius: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  padding: 0.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid;
+  border-radius: 0.5rem;
 }
 
 .info-wrapper i.codicon.codicon-file {
-    font-size: 2rem;
+  font-size: 2rem;
 }
 
 .info-wrapper p {
-    margin: 0;
+  margin: 0;
 }
 
 .message-chat-box {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    background-color: var(--vscode-textSeparator-foreground);
-    padding: 1rem;
-    margin-top:1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: var(--vscode-textSeparator-foreground);
+  padding: 1rem;
+  margin-top: 1rem;
 }
 
-.message-chat-box p{
-    margin:0;
-    overflow-wrap:anywhere;
-    height:auto;
-    padding:0.5rem 0.5rem 0 0.5rem;
-    width: auto;
+.message-chat-box p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  height: auto;
+  padding: 0.5rem 0.5rem 0 0.5rem;
+  width: auto;
 }
 
-b.user-name{
-    align-self: end;
-    padding-bottom: 0.5rem;
-    padding-right: 0.5rem;
-    padding-top: 0 !important;
+b.user-name {
+  align-self: end;
+  padding-bottom: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0 !important;
 }
 
-b.bot-name{
-    align-self: start;
-    padding-bottom: 0.5rem;
-    padding-left: 0.5rem;
-    padding-top: 0 !important;
-
+b.bot-name {
+  align-self: start;
+  padding-bottom: 0.5rem;
+  padding-left: 0.5rem;
+  padding-top: 0 !important;
 }
 
-.explanation-box{
-    display:flex;
-    flex-direction:column;
-    background-color:var(--vscode-activityBar-background);
-    border-radius:15px;
-    padding:0.5rem;
-    margin-top:0.5rem;
+.explanation-box {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--vscode-activityBar-background);
+  border-radius: 15px;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .message-chat-box.chat-bot.dropdown {
-    width: calc(100% - 6rem);
+  width: calc(100% - 6rem);
 }
 
 .button-container.all-changes {
-    width: calc(100% - 1rem);
-    margin-bottom: 0!important;
+  width: calc(100% - 1rem);
+  margin-bottom: 0 !important;
 }
 
 .dropdown-wrapper {
-    display: flex;
-    flex-direction: column;
-    background-color: var(--vscode-activityBar-background);
-    border-radius: 15px;
-    padding: 0.5rem;
-    margin-top: 0.5rem;
-    margin-bottom:0.5rem;
-    width: calc(100% - 1rem);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--vscode-activityBar-background);
+  border-radius: 15px;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  width: calc(100% - 1rem);
 }
 
 .dropdown-header {
-    display: flex;
-    align-items: center;
-    background-color: var(--vscode-activityBar-background);
-    padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  background-color: var(--vscode-activityBar-background);
+  padding: 0.5rem;
 }
-.options{
-    display:flex;
-    align-items:center;
-    gap:0.5rem;
-    margin-left:0.5rem;
+.options {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
 }
 
 .dropdown-content p {
-    padding: 0.5rem;
+  padding: 0.5rem;
 }
 
-.title{
-    display:flex;
-    align-items:center;
-    width:100%;
+.title {
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
-.dropdown-header p{
-    padding:0;
-    margin-left:0.5rem;
+.dropdown-header p {
+  padding: 0;
+  margin-left: 0.5rem;
 }
 
 .dropdown-content {
-    background-color: var(--vscode-textBlockQuote-background);
-    padding: 0.5rem;
-    border-radius: 15px;
-    margin-bottom: 0.5rem;
+  background-color: var(--vscode-textBlockQuote-background);
+  padding: 0.5rem;
+  border-radius: 15px;
+  margin-bottom: 0.5rem;
 }
 
-.last{
-    margin-bottom:0 !important;
+.last {
+  margin-bottom: 0 !important;
 }
 
-.file-name-container{
-    display: flex;
-    flex-direction: row;
-    padding-bottom:0.5rem;
-    align-items:center;
-    /* gap: 0.25rem; */
+.file-name-container {
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 0.5rem;
+  align-items: center;
+  /* gap: 0.25rem; */
 }
 
 .button-container {
-    display: flex;
-    justify-content: space-between;
-    margin: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  margin: 0.5rem;
 }
 .chatName-box {
-    position: absolute;
-    z-index: 9999;
-    width: calc(100% - 4rem);
-    padding: 1rem 2rem;
+  position: absolute;
+  z-index: 9999;
+  width: calc(100% - 4rem);
+  padding: 1rem 2rem;
 }
 
-.chatName-input{    
-    color: var(--vscode-foreground);
-    width: 100%;
-    padding: 0.5rem;
-    border: 0;
-    background-color: var(--vscode-activityBar-background);
+.chatName-input {
+  color: var(--vscode-foreground);
+  width: 100%;
+  padding: 0.5rem;
+  border: 0;
+  background-color: var(--vscode-activityBar-background);
 }
 
-.chatName-wrapper{    
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    border: 1px solid var(--vscode-activityBar-dropBorder);
-    border-radius: 5px;
-    overflow: hidden;
-    box-shadow: 0px 10px 15px 0px rgba(0,0,0,0.3);
+.chatName-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border: 1px solid var(--vscode-activityBar-dropBorder);
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0px 10px 15px 0px rgba(0, 0, 0, 0.3);
 }
 
 div#chat-deletion {
-    padding: 1rem;
-    width: calc(100% - 2rem);
-    border-bottom: 1px solid var(--vscode-activityBar-dropBorder);
+  padding: 1rem;
+  width: calc(100% - 2rem);
+  border-bottom: 1px solid var(--vscode-activityBar-dropBorder);
 }
 
 p#deletion-label {
-    margin: 0 0 1rem 0;
-    text-align: center;
+  margin: 0 0 1rem 0;
+  text-align: center;
 }
 
 .deletion-button-wrapper {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 1rem;
 }
 
 .delete-button.button-confirm {
-    background-color: var(--vscode-statusBarItem-warningBackground);
+  background-color: var(--vscode-statusBarItem-warningBackground);
 }
 
 button.delete-button.button-deny {
-    background-color: var(--vscode-textSeparator-foreground);
+  background-color: var(--vscode-textSeparator-foreground);
 }
 
 .delete-button {
-    padding: 0.5rem 1.5rem;
-    border: none;
-    border-radius: 5px;
-    color: var(--vscode-editor-foreground);
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  color: var(--vscode-editor-foreground);
 }
 
-#hoverMessage{
-    display:none;
-    border-radius: 10px;
-    position: absolute;
-    bottom: 35px;
-    left: 0;
-    background-color: rgba(0,0,0,0.4);
-    color: var(--vscode-editor-foreground);
-    text-align: center;
-    margin: 1rem;
-    padding: 0.5rem 0;
-    width: calc(100% - 2rem);  
-    z-index: 1;
+#hoverMessage {
+  display: none;
+  border-radius: 10px;
+  position: absolute;
+  bottom: 35px;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: var(--vscode-editor-foreground);
+  text-align: center;
+  margin: 1rem;
+  padding: 0.5rem 0;
+  width: calc(100% - 2rem);
+  z-index: 1;
 }
 
 .accept-button {
-    border: 0;
-    height:auto;
-    padding:0.25rem 0.5rem;
-    background-color: var(--vscode-foreground);
-    appearance: none;
-    color: var(--vscode-activityBar-background);
-    border-radius: 5px;
+  border: 0;
+  height: auto;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--vscode-foreground);
+  appearance: none;
+  color: var(--vscode-activityBar-background);
+  border-radius: 5px;
 }
 
 button.decline-button {
-    border: 1px solid var(--vscode-foreground);
-    appearance: none;
-    border-radius: 5px;
-    background-color: var(--vscode-background);
-    color: var(--vscode-foreground);
+  border: 1px solid var(--vscode-foreground);
+  appearance: none;
+  border-radius: 5px;
+  background-color: var(--vscode-background);
+  color: var(--vscode-foreground);
 }
 
 .explanation-box p {
-    padding: 0.5rem;
-}   
-
-.file-name-container p{
-    padding:0!important;
+  padding: 0.5rem;
 }
 
-.file-name-container i{
-    width:1rem;
-    height:1rem;
-    align-self:end;
+.file-name-container p {
+  padding: 0 !important;
 }
 
-.explanation-box .divider{
-    border-color: var(--vscode-activityBar-activeBorder)!important;
+.file-name-container i {
+  width: 1rem;
+  height: 1rem;
+  align-self: end;
 }
 
-.divider{
-    width:100%;
-    height:1px;
-    border-top:1px solid var(--vscode-foreground);
-    opacity:0.2;
+.explanation-box .divider {
+  border-color: var(--vscode-activityBar-activeBorder) !important;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  border-top: 1px solid var(--vscode-foreground);
+  opacity: 0.2;
 }
 
 .message-chat-box.chat-user {
-    border-radius: 15px 0px 15px 15px;
-    margin-left:3rem;
-    margin-right:1rem;
-    align-self:end;
-    width:fit-content;
+  border-radius: 15px 0px 15px 15px;
+  margin-left: 3rem;
+  margin-right: 1rem;
+  align-self: end;
+  width: fit-content;
+  background-color: var(--vscode-descriptionForeground);
 }
 
-.message-chat-box:last-child{
-    margin-bottom:1rem;
+.message-chat-box:last-child {
+  margin-bottom: 1rem;
 }
 
 .message-chat-box.chat-bot {
-    margin-left:1rem;
-    margin-right:3rem;
-    border-radius: 0px 15px 15px 15px;
-    align-self:start;
-    width:fit-content;
+  margin-left: 1rem;
+  margin-right: 3rem;
+  border-radius: 0px 15px 15px 15px;
+  align-self: start;
+  width: fit-content;
 }
 
-.chatbox{
-    border-top:1px solid var(--vscode-activityBar-dropBorder);
-    width:100%;
-    height:calc(100% - 4rem - 1px);
-    overflow-y:auto;
-    display:flex;
-    flex-direction:column;
+.chatbox {
+  border-top: 1px solid var(--vscode-activityBar-dropBorder);
+  width: 100%;
+  height: calc(100% - 4rem - 1px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
-.input-button{
-    background-color: var(--vscode-activityBar-background);
-    padding:0.5rem;
-    border-left:1px solid var(--vscode-activityBar-dropBorder);
+.input-button {
+  background-color: var(--vscode-activityBar-background);
+  padding: 0.5rem;
+  border-left: 1px solid var(--vscode-activityBar-dropBorder);
 }
 
 /* HTML: <div class="loader"></div> */
 .loader {
-    width: 30px;
-    aspect-ratio: 4;
-    --_g: no-repeat radial-gradient(circle closest-side,var(--vscode-editor-foreground) 85%, var(--vscode-editor-background));
-    background: 
-      var(--_g) 0%   50%,
-      var(--_g) 50%  50%,
-      var(--_g) 100% 50%;
-    background-size: calc(100%/3) 100%;
-    animation: l7 1s infinite linear;
+  width: 30px;
+  aspect-ratio: 4;
+  --_g: no-repeat
+    radial-gradient(
+      circle closest-side,
+      var(--vscode-editor-foreground) 85%,
+      var(--vscode-editor-background)
+    );
+  background: var(--_g) 0% 50%, var(--_g) 50% 50%, var(--_g) 100% 50%;
+  background-size: calc(100% / 3) 100%;
+  animation: l7 1s infinite linear;
+}
+@keyframes l7 {
+  33% {
+    background-size: calc(100% / 3) 0%, calc(100% / 3) 100%, calc(100% / 3) 100%;
   }
-  @keyframes l7 {
-      33%{background-size:calc(100%/3) 0%  ,calc(100%/3) 100%,calc(100%/3) 100%}
-      50%{background-size:calc(100%/3) 100%,calc(100%/3) 0%  ,calc(100%/3) 100%}
-      66%{background-size:calc(100%/3) 100%,calc(100%/3) 100%,calc(100%/3) 0%  }
+  50% {
+    background-size: calc(100% / 3) 100%, calc(100% / 3) 0%, calc(100% / 3) 100%;
   }
-
-.loader-box{
-    display: flex;
-    align-items: end;
-    justify-content: start;
-    width: calc(100% - 2rem);
-    margin-bottom: 1rem;
+  66% {
+    background-size: calc(100% / 3) 100%, calc(100% / 3) 100%, calc(100% / 3) 0%;
+  }
 }
 
-.loader-box p{
-    margin:0;
-    padding-right:1rem;
+.loader-box {
+  display: flex;
+  align-items: end;
+  justify-content: start;
+  width: calc(100% - 2rem);
+  margin-bottom: 1rem;
+}
+
+.loader-box p {
+  margin: 0;
+  padding-right: 1rem;
 }

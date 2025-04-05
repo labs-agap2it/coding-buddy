@@ -16,6 +16,7 @@ import * as userEditor from "../editor/userEditor";
 import vectraIndex from "../db/vectra";
 import { generateEmbedding } from "./embeddingConnection";
 import { handle } from "../webview-assets/sidebar-webview/js/webviewHandler";
+import { getProjectId } from "../changeDetector/changeDetector";
 
 export async function handleUserRequestToLLM(
   message: string,
@@ -137,7 +138,9 @@ export async function handleLLMAdditionalInfo(
     global.numberOfTries = 1;
   }
 
-  const context = await vectraIndex.queryItems(result!, 3);
+  const context = await vectraIndex.queryItems(result!, 3, {
+    projectId: { $eq: getProjectId() },
+  });
   const additionalInfo: llmAdditionalInfo[] = [];
   context.map((item) => {
     additionalInfo.push({

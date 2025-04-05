@@ -1,6 +1,7 @@
 import path from "path";
 import {
   LocalIndex,
+  MetadataFilter,
   type IndexItem,
   type MetadataTypes,
   type QueryResult,
@@ -43,6 +44,7 @@ class VectraIndex {
           await this.instance.insertItem({
             vector: chunk.embedding,
             metadata: {
+              projectId: chunk.projectId,
               path: chunk.path.toLowerCase(),
               content: chunk.content,
             },
@@ -69,9 +71,10 @@ class VectraIndex {
 
   async queryItems(
     embedding: number[],
-    k: number
+    k: number,
+    filter?: MetadataFilter
   ): Promise<QueryResult<Record<string, MetadataTypes>>[]> {
-    return await this.instance.queryItems(embedding, k);
+    return await this.instance.queryItems(embedding, k, filter);
   }
 
   async deleteItemByPath(path: string): Promise<void> {

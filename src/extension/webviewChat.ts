@@ -1,20 +1,16 @@
 import * as vscode from "vscode";
 import {
-  generateFileHash,
-  generateProjectSnapshot,
   getProjectId,
   initializeHashDatabase,
   onDeleteTextDocumentEvent,
   onRenameTextDocumentEvent,
   onSaveTextDocumentEvent,
 } from "../changeDetector/changeDetector";
-import hashDatabase from "../db/hashDatabase";
-import vectraIndex from "../db/vectra";
 import { getEventEmitter } from "../Eventbus";
 import * as codeHistory from "../tempManagement/codeHistory";
 import * as messageHandler from "./messageHandler";
 import { getAPIKey } from "../settings/savedSettings";
-import { on } from "events";
+import { changeOpenedFile } from "../editor/userEditor";
 
 export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "coding-buddy.buddyWebview";
@@ -38,9 +34,11 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
   public get view() {
     return this._view;
   }
+
   public get infoHistory(): string[] {
     return this._infoHistory;
   }
+
   public set infoHistory(value: string[]) {
     this._infoHistory = value;
   }
@@ -63,6 +61,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     this._registerEventListeners(webviewView.webview);
 
     global.APIKEY = getAPIKey();
+    global.projectId = getProjectId();
 
     await initializeHashDatabase();
   }
@@ -99,6 +98,9 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     this._eventEmitter?.on("chat-deletion-requested", () =>
       messageHandler.handleChatDeletionRequested(this)
     );
+    this._eventEmitter?.on("go-to-file", (value) => {
+      changeOpenedFile(value);
+    });
     vscode.workspace.onDidSaveTextDocument(async (event) => {
       await onSaveTextDocumentEvent(event);
     });
@@ -120,6 +122,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
         "sidebar-chat.css"
       )
     );
+
     const htmlUri = await vscode.workspace.fs.readFile(
       vscode.Uri.joinPath(
         this._extensionUri,
@@ -127,6 +130,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
         "chat.html"
       )
     );
+
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(
         this._extensionUri,
@@ -134,6 +138,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
         "main.bundle.js"
       )
     );
+
     const codiconsUri = webview.asWebviewUri(
       vscode.Uri.joinPath(
         this._extensionUri,
@@ -161,6 +166,7 @@ export class CodingBuddyViewProvider implements vscode.WebviewViewProvider {
     const scriptLoad = `<script type="module" nonce="${nonce}" src="${scriptUri}"></script>
     </body>
     </html>`;
+
     return header + htmlUri.toString() + scriptLoad;
   }
 }

@@ -88,7 +88,7 @@ A:{
 },
 Q:"Can you read my whole project?"
 A:{
-    "chat":"I'm sorry, but I can't help you with that.",
+    "chat":"I'm sorry, but I can't help you with that. But i can help you explaining code if you mention it in your message.",
     "code":[],
     "additional_info":{
         "keywords": [],
@@ -170,6 +170,17 @@ export const rulesets = `
   The HTML included should be in the "chat" field and also in the "explanation" field   
 
   The user also already has information about what you're doing in any given moment, so you shouldn't include that in your response.
+  
+  When you responde to the user, you should use html in your respond. The HTML should be in the "chat" field and also in the "explanation" field.
+
+  You only can use basic html tags like : ul, ol, b, br, em. You can't use any other tags.
+
+  When you want to make a paragraph, you shloud use two br tags, for better formatting.
+
+  You should never answer with markdown simbols, you should only use html and never markdown.
+  
+  If you mention a file, you should surround it with a "a" tag, with the file's URI as the href attribute.
+  
     `;
 
 export const jsonFormat = `
@@ -200,7 +211,7 @@ export const jsonFormat = `
   ---JSON End
     `;
 
-export const askMoreInformation = `
+export const stopAskingForInformation = `
     You have tried tree times to ask for more information.
     You should stop asking for more information and tell the user that you can't find an answer and ask them to try again with a different request (preferably a more specific one). 
     `;

@@ -59,12 +59,12 @@ export async function initWorkers(
 
       worker.on("exit", (code) => {
         console.log(`Worker exited with code: ${code}`);
-        if (code !== 0) {
+        if (code !== 1) {
           console.error(`Worker stopped unexpectedly with code ${code}`);
         }
       });
       workers.push(initWorkerListener(worker));
-      worker.postMessage({ files: filesForWorker, APIKEY: global.APIKEY });
+      worker.postMessage({ files: filesForWorker, APIKEY: global.APIKEY, projectId: global.projectId });
     }
 
     await Promise.all(workers);
