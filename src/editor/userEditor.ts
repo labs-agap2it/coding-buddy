@@ -326,6 +326,7 @@ async function getDecorationRangeFromChange(
     );
   } else {
     end = calculateNewEndPosition(change, start);
+    end = calculateNewEndPosition(change, start);
   }
 
   let range = new vscode.Range(start, end);
@@ -404,6 +405,7 @@ export async function handleChangesOnEditor(
     if (!element) {
       return;
     }
+    await changeOpenedFile(element.file.toString());
     await changeOpenedFile(element.file.toString());
     if (element.hasPendingChanges) {
       await replaceHighlightedCodeOnEditor(
