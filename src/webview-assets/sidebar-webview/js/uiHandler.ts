@@ -8,7 +8,7 @@ import { VsCodeApi } from "./types";
 
 export function toggleLoader() {
   let loader = document.getElementById("message-loader");
-  if(!loader){
+  if (!loader) {
     return;
   }
   loader.classList.toggle("hidden");
@@ -38,12 +38,12 @@ export function removeMessages() {
   if (!chatContainer) {
     return;
   }
-    chatContainer.innerHTML = "";
-    chatContainer.appendChild(chatDeletionBox);
-    chatContainer.appendChild(chatNameBox);
+  chatContainer.innerHTML = "";
+  //chatContainer.appendChild(chatDeletionBox);
+  chatContainer.appendChild(chatNameBox);
 }
 
-export function showFoundFiles(files : any) {
+export function showFoundFiles(files: any) {
   console.log(files);
   let infoContainer = document.querySelector("#info-container");
   if (!infoContainer) {
@@ -55,9 +55,10 @@ export function showFoundFiles(files : any) {
   infoContainer.innerHTML = "";
   //compare file paths on list to check for duplicates
   files = files.filter(
-    (file : any, index : any) => files.indexOf(file).searchResult === index.searchResult
+    (file: any, index: any) =>
+      files.indexOf(file).searchResult === index.searchResult
   );
-  files.forEach((element : any) => {
+  files.forEach((element: any) => {
     let filename = element.searchResult.fsPath.split("\\").pop();
     let message = "Sending file " + filename;
     let fileDiv = renderInfoDiv(message, true, infoContainer);
@@ -67,7 +68,7 @@ export function showFoundFiles(files : any) {
 export function toggleChatDeleteBox() {
   document.getElementById("chat-deletion")?.classList.toggle("hidden");
   let nameChange = document.getElementById("chatNameBox");
-  if(!nameChange){
+  if (!nameChange) {
     return;
   }
   if (!nameChange.classList.contains("hidden")) {
@@ -78,7 +79,7 @@ export function toggleChatDeleteBox() {
 export function toggleNameChangeBox() {
   document.getElementById("chatNameBox")?.classList.toggle("hidden");
   let deleteChat = document.getElementById("chat-deletion");
-  if(!deleteChat){
+  if (!deleteChat) {
     return;
   }
   if (!deleteChat.classList.contains("hidden")) {
@@ -86,9 +87,9 @@ export function toggleNameChangeBox() {
   }
 }
 
-export function toggleDropdown(id : string) {
+export function toggleDropdown(id: string) {
   let dropdown = document.getElementById(id);
-  if(!dropdown){
+  if (!dropdown) {
     return;
   }
   dropdown.classList.toggle("hidden");
@@ -102,7 +103,7 @@ export function toggleDropdown(id : string) {
   }
 }
 
-export function processLLMResponse(vscode : VsCodeApi, response : any) {
+export function processLLMResponse(vscode: VsCodeApi, response: any) {
   if (response.intent === "fix" || response.intent === "generate") {
     if (response.code) {
       if (response.code.length === 1) {
@@ -112,7 +113,7 @@ export function processLLMResponse(vscode : VsCodeApi, response : any) {
       }
     } else if (response.additional_info_needed) {
       //TODO this function exists??
-     // showNeededInfo(response.additional_info_needed);
+      // showNeededInfo(response.additional_info_needed);
     }
   } else {
     if (response.chat) {
@@ -124,7 +125,11 @@ export function processLLMResponse(vscode : VsCodeApi, response : any) {
   }
 }
 
-export function switchOpenedFile(vscode: VsCodeApi, response: any, changeID : string) {
+export function switchOpenedFile(
+  vscode: VsCodeApi,
+  response: any,
+  changeID: string
+) {
   vscode.postMessage({
     type: "change-opened-file",
     value: { response: response, changeID: changeID },

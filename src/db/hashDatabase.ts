@@ -65,6 +65,7 @@ class HashDatabase {
     `;
     this.run(query, [filePath, projectId, hash]);
   }
+
   delete(filePath: string) {
     const query = `DELETE FROM file_hashes WHERE file_path = ?`;
     this.run(query, [filePath]);

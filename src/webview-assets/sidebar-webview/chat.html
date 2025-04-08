@@ -1,39 +1,48 @@
 <body>
-    <div class="container">
-        <div class="chatbox" id="chat-container">
-            <div id="chat-deletion" class="chat-deletion-container hidden">
-                <div class="chat-deletion-wrapper">
-                    <p id="deletion-label">Are you sure you want to delete chat ?</p>
-                    <div class="deletion-button-wrapper">
-                        <button id="confirm-deletion" class="delete-button button-confirm" >
-                            Yes
-                        </button>
-                        <button id="deny-deletion" class="delete-button button-deny">
-                            No
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="chatNameBox" class="chatName-box hidden">
-                <div class="chatName-wrapper">
-                    <input type="text" id="chatName-input" class="chatName-input">
-                    <i id="edit-chatName" class="codicon codicon-arrow-up input-button"></i>
-                </div>
-            </div>
+  <div class="container">
+    <div id="chat-deletion" class="chat-deletion-container hidden">
+      <div class="chat-deletion-wrapper">
+        <p id="deletion-label">Are you sure you want to delete chat ?</p>
+        <div class="deletion-button-wrapper">
+          <button id="confirm-deletion" class="delete-button button-confirm">
+            Yes
+          </button>
+          <button id="deny-deletion" class="delete-button button-deny">
+            No
+          </button>
         </div>
-        <div class="input-box">
-            <div id="message-loader" class="hidden loader-box">
-                <p>Coding Buddy is thinking</p>
-                <div class="loader"></div>
-            </div>
-            <div id="info-container" class="info-container hidden">
-            </div>
-            <div class="messageBoxContainer">
-                <div class="input-wrapper" id="messageBoxHover">
-                    <input type="text" class="message-input" id="message-box" placeholder="Type a message...">
-                    <i id="send-button" class="codicon codicon-arrow-up input-button"></i>
-                </div>
-                <div id="hoverMessage"></div>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <div class="chatbox" id="chat-container">
+      <div id="chatNameBox" class="chatName-box hidden">
+        <div class="chatName-wrapper">
+          <input type="text" id="chatName-input" class="chatName-input" />
+          <i
+            id="edit-chatName"
+            class="codicon codicon-arrow-up input-button"
+          ></i>
+        </div>
+      </div>
+    </div>
+    <div class="input-box">
+      <div id="message-loader" class="hidden loader-box">
+        <p>Coding Buddy is thinking</p>
+        <div class="loader"></div>
+      </div>
+      <div id="info-container" class="info-container hidden"></div>
+      <div class="messageBoxContainer">
+        <div class="input-wrapper" id="messageBoxHover">
+          <input
+            type="text"
+            class="message-input"
+            id="message-box"
+            placeholder="Type a message..."
+          />
+          <i id="send-button" class="codicon codicon-arrow-up input-button"></i>
+        </div>
+        <div id="hoverMessage"></div>
+      </div>
+    </div>
+  </div>
+</body>

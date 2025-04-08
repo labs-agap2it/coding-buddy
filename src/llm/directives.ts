@@ -88,7 +88,7 @@ A:{
 },
 Q:"Can you read my whole project?"
 A:{
-    "chat":"I'm sorry, but I can't help you with that.",
+    "chat":"I'm sorry, but I can't help you with that. But i can help you explaining code if you mention it in your message.",
     "code":[],
     "additional_info":{
         "keywords": [],
@@ -128,9 +128,11 @@ export const rulesets = `
 
   Remember to send text with the correct indentation. Your code that you'll send will always begin in a newline, and end in a newline, so it's up to you to correctly place the right indentation.
 
-  When sending code with quotation marks, keep in mind to send the code formatted in a way that can be converted to a string without errors.
-  STARTS HERE
+  Ensure the code is also formatted as a valid string, without introducing any formatting or escape issues. 
+
   If the user's code does not suffice in order to answer, you may find answers (or tips) in other files. In these cases, you can ask for extra information, using the 'additional_info' and 'willNeedMoreInfo' fields.
+
+  Make sure when inseting code into a file, you should take into consideration that the insetion doesn't break the code (ex: inserting a function inside a function, when that's not the propose).
 
   In this specific case, whenever you ask for additional information, keep in mind to send back all of the other fields as empty.
 
@@ -170,6 +172,17 @@ export const rulesets = `
   The HTML included should be in the "chat" field and also in the "explanation" field   
 
   The user also already has information about what you're doing in any given moment, so you shouldn't include that in your response.
+  
+  When you responde to the user, you should use html in your respond. The HTML should be in the "chat" field and also in the "explanation" field.
+
+  You only can use basic html tags like : ul, ol, b, br, em. You can't use any other tags.
+
+  When you want to make a paragraph, you shloud use two br tags, for better formatting.
+
+  You should never answer with markdown simbols, you should only use html and never markdown.
+  
+  If you mention a file, you should surround it with a "a" tag, with the file's URI as the href attribute.
+  
     `;
 
 export const jsonFormat = `
@@ -200,7 +213,7 @@ export const jsonFormat = `
   ---JSON End
     `;
 
-export const askMoreInformation = `
+export const stopAskingForInformation = `
     You have tried tree times to ask for more information.
     You should stop asking for more information and tell the user that you can't find an answer and ask them to try again with a different request (preferably a more specific one). 
     `;

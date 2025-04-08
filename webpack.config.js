@@ -1,14 +1,13 @@
 const path = require("path");
 
 module.exports = {
-  entry: "./webview-assets/sidebar-webview/main.ts",
+  entry: "./src/webview-assets/sidebar-webview/main.ts",
   output: {
     path: path.resolve(__dirname, "./src/webview-assets/sidebar-webview/dist"),
     filename: "main.bundle.js",
   },
   module: {
     rules: [
-      { test: /\.hbs$/, loader: "handlebars-loader" },
       { test: /\.ts$/, loader: "ts-loader", exclude: /node_modules/ },
       { test: /\.(svelte|svelte\.js)$/, use: "svelte-loader" },
       {

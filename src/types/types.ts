@@ -1,4 +1,5 @@
 export interface ContentOfFile {
+  projectId: string;
   content: string;
   path: string;
 }

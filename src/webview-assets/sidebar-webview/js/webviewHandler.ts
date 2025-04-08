@@ -64,9 +64,11 @@ export function handleClearChat() {
   removeMessages();
   document.getElementById("message-box")?.removeAttribute("disabled");
 }
+
 export function handleEditName() {
   toggleNameChangeBox();
 }
+
 export function handleError() {
   toggleLoader();
   document.getElementById("message-box")?.removeAttribute("disabled");

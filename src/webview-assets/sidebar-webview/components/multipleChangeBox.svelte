@@ -77,7 +77,13 @@
                     type: "accept-changes",
                     value: changeID,
                   });
-                  enableInputBox();
+                  const hasMorePendingChanges = responseState.some(
+                    (r: any) => r.hasPendingChanges
+                  );
+
+                  if (!hasMorePendingChanges) {
+                    enableInputBox();
+                  }
                 }}>Accept</button
               >
               <button
@@ -89,7 +95,13 @@
                     type: "decline-changes",
                     value: changeID,
                   });
-                  enableInputBox();
+                  const hasMorePendingChanges = responseState.some(
+                    (r: any) => r.hasPendingChanges
+                  );
+
+                  if (!hasMorePendingChanges) {
+                    enableInputBox();
+                  }
                 }}>Decline</button
               >
             </div>
@@ -116,6 +128,7 @@
             type: "decline-all-changes",
             value: response,
           });
+          enableInputBox();
         }}>Decline All</button
       >
       <button
@@ -129,6 +142,7 @@
             type: "accept-all-changes",
             value: response,
           });
+          enableInputBox();
         }}>Accept All</button
       >
     </div>

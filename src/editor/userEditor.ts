@@ -19,7 +19,6 @@ export function getUserCode(): string {
     ${formattedCode}
     ### OPEN FILE END`;
 }
-
 var highlightDecoration: vscode.TextEditorDecorationType;
 
 export async function insertSnippetsOnEditor(
@@ -28,7 +27,6 @@ export async function insertSnippetsOnEditor(
   file: string
 ) {
   let editor = vscode.window.activeTextEditor;
-
   let parsedFile = vscode.Uri.parse(file);
   console.log(editor?.document.uri);
   console.log(parsedFile);
@@ -79,62 +77,122 @@ async function changeTextOnEditor(
   editor: vscode.TextEditor,
   previousCodeArray: string[]
 ): Promise<vscode.Range> {
-  let start = new vscode.Position(0, 0); //*Posiçao default
-  if (change.lines.start !== 0) {
-    //* A mundança vai começar no inicio do ficheiro?
-    let character = 0;
-    if (
-      !change.willReplaceCode &&
-      previousCodeArray[change.lines.start - 1] !== ""
-    ) {
-      //* Nao ira trocar codigo e a linha que ira começar a mudança nao esta vazia
-      if (previousCodeArray[change.lines.start - 1] !== undefined) {
-        character = previousCodeArray[change.lines.start - 1].length + 1; //*define character a posiçao logo a seguir ao fim da linha
-      }
-    }
-    start = new vscode.Position(change.lines.start - 1, character); //* se a linha for vazia começa em 0 senao no fim
-  }
-  let end = new vscode.Position(change.lines.end, 0); //* Posiçao default
-  if (change.isSingleLine) {
-    //* So vai alterar uma linha?
-    if (previousCodeArray.length < change.lines.start) {
-      //* o inicio é maior que a ultima linha ja existente? (fim da pagina)
-      end = new vscode.Position(change.lines.end - 1, 0);
-    } else {
-      end = new vscode.Position(
-        change.lines.start - 1,
-        previousCodeArray[change.lines.start - 1].length
-      ); //* define a posiçao(linha do inicio, fim da linha)
-    }
+  // Get the starting position of the change
+  let start = getStartPosition(change, previousCodeArray);
+
+  // Get the ending position of the change
+  let end = getEndPosition(change, previousCodeArray, start);
+
+  // Define the editing range
+  let range = new vscode.Range(start, end);
+
+  await editor.edit((editBuilder) => {
+    applyChanges(editBuilder, change, editor, previousCodeArray, start, range);
+  });
+
+  // Define the new end position after inserting the text
+  end = calculateNewEndPosition(change, start);
+  change.lines.end = end.line;
+  return new vscode.Range(start, end);
+}
+
+/**
+ * Gets the starting position where the change will take place in the editor.
+ */
+function getStartPosition(
+  change: llmChange,
+  previousCodeArray: string[]
+): vscode.Position {
+  if (change.lines.start === 0) {
+    return new vscode.Position(0, 0);
   }
 
-  let range = new vscode.Range(start, end); //* Intervalo que ira ser alterado
-  await editor.edit((editBuilder) => {
-    if (change.willReplaceCode) {
-      editBuilder.delete(range); //* Se for trocar codigo apaga o antigo
+  let character = 0;
+  const prevLineIndex = change.lines.start - 1;
+  const prevLineText = previousCodeArray[prevLineIndex] || "";
+
+  if (!change.willReplaceCode && prevLineText !== "") {
+    character = prevLineText.length + 1; // Position after the end of the line
+  }
+  for (let i = 0; i < prevLineText.length; i++) {
+    if (prevLineText[i] === " ") {
+      character++;
+    } else {
+      break;
     }
-    if (change.lines.start > previousCodeArray.length) {
-      //* a mundança ocorre em linha que nao existiam (fim da pag)
-      for (let i = previousCodeArray.length; i < change.lines.start; i++) {
-        editBuilder.insert(new vscode.Position(i, 0), "\n"); //*adiciona as linhas
-      }
-    }
-    let lineText = editor.document.getText().split(/\r\n|\r|\n/)[start.line]; //*Agarra na linha do codigo onde a mudança vai tomar lugar
-    if (!change.willReplaceCode && lineText !== "") {
-      //*Nao é para trocar codigo e a linha nao esta vazia
-      change.text += "\n"; //*adiciona um \n no final da mudança
-    }
-    editBuilder.insert(start, "\n" + change.text); //!DUVIDA
-  });
-  //TODO: Se nao formos defenir o highlightDecoration aqui nao é necessario o codigo abaixo
-  let changeArray = change.text.split(/\r\n|\r|\n/); //*Transforma a mudança num array dividido por linhas
-  end = new vscode.Position(
+  }
+  return new vscode.Position(prevLineIndex, character);
+}
+
+/**
+ * Gets the ending position where the change will stop in the editor.
+ */
+function getEndPosition(
+  change: llmChange,
+  previousCodeArray: string[],
+  start: vscode.Position
+): vscode.Position {
+  if (!change.isSingleLine) {
+    return new vscode.Position(change.lines.end, 0);
+  }
+
+  const lineExists = previousCodeArray.length >= change.lines.start;
+  return lineExists
+    ? new vscode.Position(start.line, previousCodeArray[start.line].length)
+    : new vscode.Position(change.lines.end - 1, 0);
+}
+
+/**
+ * Applies the changes to the code editor.
+ */
+function applyChanges(
+  editBuilder: vscode.TextEditorEdit,
+  change: llmChange,
+  editor: vscode.TextEditor,
+  previousCodeArray: string[],
+  start: vscode.Position,
+  range: vscode.Range
+) {
+  if (change.willReplaceCode) {
+    editBuilder.delete(range);
+  }
+
+  ensureLinesExist(editBuilder, previousCodeArray, change.lines.start);
+
+  let lineText = editor.document.getText().split(/\r\n|\r|\n/)[start.line];
+
+  if (!change.willReplaceCode && lineText !== "") {
+    change.text += "\n";
+  }
+
+  editBuilder.insert(start, change.text);
+}
+
+/**
+ * Ensures that all necessary lines exist before inserting the change.
+ */
+function ensureLinesExist(
+  editBuilder: vscode.TextEditorEdit,
+  previousCodeArray: string[],
+  startLine: number
+) {
+  for (let i = previousCodeArray.length; i < startLine; i++) {
+    editBuilder.insert(new vscode.Position(i, 0), "\n");
+  }
+}
+
+/**
+ * Calculates the new end position after inserting the text.
+ */
+function calculateNewEndPosition(
+  change: llmChange,
+  start: vscode.Position
+): vscode.Position {
+  const changeArray = change.text.split(/\r\n|\r|\n/);
+  return new vscode.Position(
     start.line + changeArray.length - 1,
     changeArray[changeArray.length - 1].length
-  ); //*Define como(linha inicial da mudança + quantas linhas a mundaça ficou depois da formataçao, o ultimo char da ultima linha)
-  range = new vscode.Range(start, end);
-
-  return range;
+  );
 }
 
 function showDecorationsOnEditor(
@@ -267,10 +325,7 @@ async function getDecorationRangeFromChange(
       previousCodeArray[change.lines.start - 1].length
     );
   } else {
-    end = new vscode.Position(
-      change.lines.end - 1,
-      previousCodeArray[change.lines.end - 1].length
-    );
+    end = calculateNewEndPosition(change, start);
   }
 
   let range = new vscode.Range(start, end);
@@ -304,6 +359,7 @@ export async function replaceHighlightedCodeOnEditor(
       showDecorationsOnEditor(decorationRange, changes[i], editorCodeArray)
     );
   }
+
   editor.setDecorations(highlightDecoration, decorationList);
 
   let response = {
@@ -315,11 +371,11 @@ export async function replaceHighlightedCodeOnEditor(
   codeHistory.saveCodeHistory(response);
 }
 
-export async function changeOpenedFile(code: llmCode) {
+export async function changeOpenedFile(filePath: string) {
   let editor = vscode.window.activeTextEditor;
 
   try {
-    const targetUri = vscode.Uri.parse(code.file.toString());
+    const targetUri = vscode.Uri.parse(filePath);
 
     if (!editor) {
       const document = await vscode.workspace.openTextDocument(targetUri);
@@ -348,7 +404,7 @@ export async function handleChangesOnEditor(
     if (!element) {
       return;
     }
-    await changeOpenedFile(element);
+    await changeOpenedFile(element.file.toString());
     if (element.hasPendingChanges) {
       await replaceHighlightedCodeOnEditor(
         element.changes,

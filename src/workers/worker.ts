@@ -2,13 +2,16 @@ import { parentPort } from "worker_threads";
 import fs from "fs/promises";
 import type { DbItem, ContentOfFile } from "../types/types";
 import { generateEmbedding } from "../llm/embeddingConnection";
-import vectraIndex from "../db/vectra";
 import { extractFunctionsFromFile } from "../fileSystem/functionExtrator";
 
 parentPort!.on("message", async (data) => {
   const APIKEY = data.APIKEY;
+  const projectId = data.projectId;
   const files = data.files;
-  const contents: ContentOfFile[] = await readFilesContentsAsync(files);
+  const contents: ContentOfFile[] = await readFilesContentsAsync(
+    files,
+    projectId
+  );
   const functions: DbItem[] = await extractFunctionsWithEmbeddings(
     contents,
     APIKEY
@@ -19,7 +22,8 @@ parentPort!.on("message", async (data) => {
 });
 
 export async function readFilesContentsAsync(
-  filePaths: string[]
+  filePaths: string[],
+  projectId: string
 ): Promise<ContentOfFile[]> {
   const contents: ContentOfFile[] = [];
 
@@ -28,6 +32,7 @@ export async function readFilesContentsAsync(
       const content = await fs.readFile(filePath, "utf8");
 
       contents.push({
+        projectId: projectId!,
         content: content,
         path: filePath,
       });
@@ -49,6 +54,7 @@ export async function extractFunctionsWithEmbeddings(
     for (const func of functions) {
       const embedding = await generateEmbedding(func, APIKEY);
       functionsWithEmbeddings.push({
+        projectId: file.projectId,
         path: file.path,
         content: func,
         embedding: embedding!,
@@ -74,11 +80,19 @@ export async function generateChunksWithEmbeddings(
       i += chunkSize * (1 - percentualOverlap)
     ) {
       const chunk = file.content.slice(i, i + chunkSize);
-      const embedding = await generateEmbedding(chunk, APIKEY);
+      const contentEmbedding = await generateEmbedding(chunk, APIKEY);
+      const filePathEmbedding = await generateEmbedding(file.path, APIKEY);
       chunks.push({
+        projectId: file.projectId,
         path: file.path,
         content: chunk,
-        embedding: embedding!,
+        embedding: contentEmbedding!,
+      });
+      chunks.push({
+        projectId: file.projectId,
+        path: file.path,
+        content: chunk,
+        embedding: filePathEmbedding!,
       });
     }
     console.log(`File chunked: ${file.path}`);
