@@ -130,6 +130,8 @@ export const rulesets = `
 
   Ensure the code is also formatted as a valid string, without introducing any formatting or escape issues. 
 
+  Remember to not make a change inside incorrect scopes or break the code (ex: inserting a function inside a function).
+
   If the user's code does not suffice in order to answer, you may find answers (or tips) in other files. In these cases, you can ask for extra information, using the 'additional_info' and 'willNeedMoreInfo' fields.
 
   Make sure when inseting code into a file, you should take into consideration that the insetion doesn't break the code (ex: inserting a function inside a function, when that's not the propose).
@@ -139,6 +141,12 @@ export const rulesets = `
   When you need more information, you should set the "willNeedMoreInfo" field to true and send a prompt (in the "promptForSearch" field) that will be used to search in a vector database containing the user's codebase.
 
   The prompt should be otimize for semantic search, so you should include terms semantically related to the user's request.
+
+  When sending the prompt try to ask for a specific file or a specific keyword (ex: if a user wants to fix a function, you should include the function's name in the prompt, or ask for something that is related to the function but never words like ("usage", "declaration", "example", "docs", "docstring", "comment", "definition", "call", "implementation", "tests", "testing", "error", "exception", "fix", "bug", "issue").
+
+  Remeber to use the context provied initially in the prompt and the opened file, to you construct the prompt.
+  
+  Only send a prompt when you send the "willNeedMoreInfo" field to true.
 
   Keep in mind that if you find a connection between two files, you can search for the file's name using the workspace URI provided before. However, if the workspace URI is different than the opened file's URI, you won't find the file, so instead of requesting for a search, tell the user that the file they have open isn't on this workspace, and that they should switch to the folder containing that file so that you can search for an answer.
 
@@ -166,6 +174,7 @@ export const rulesets = `
   You will also be provided with a list of examples (delimited by ***Examples Start and ***Examples End) that you can use to help better understand the user's intentions, and therefore provide a better response.
 
   You will also recieve the last messages exchanged between yourself and the user. This will be delimited by "### HISTORY START" and "### HISTORY END".
+  
   Your messages are placed inside "llmResponse", as per your own JSON file format, while the user's messages are placed inside "userMessage"
 
   You can use HTML in the explanation you send to the user, in order to provide a better understanding of the code you are providing. However, you should not include a "p" tag in the response. 

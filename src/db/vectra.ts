@@ -11,6 +11,7 @@ import { Mutex } from "async-mutex";
 import * as fs from "fs/promises";
 import type { DbItem } from "../types/types";
 import { initWorkers } from "../workers/workermanager";
+import * as vscode from "vscode";
 
 const indexDir = path.join(__dirname, "vectra_index");
 const mutex = new Mutex();
@@ -45,7 +46,7 @@ class VectraIndex {
             vector: chunk.embedding,
             metadata: {
               projectId: chunk.projectId,
-              path: chunk.path.toLowerCase(),
+              path: vscode.Uri.parse(chunk.path).toString(),
               content: chunk.content,
             },
           });
@@ -84,7 +85,7 @@ class VectraIndex {
     }
 
     const results = await this.instance.listItemsByMetadata({
-      path: { $eq: path.toLowerCase() },
+      path: { $eq: vscode.Uri.parse(path).toString() },
     });
 
     if (results.length === 0) {
@@ -107,7 +108,7 @@ class VectraIndex {
     path: string
   ): Promise<IndexItem<Record<string, MetadataTypes>>[]> {
     return await this.instance.listItemsByMetadata({
-      path: { $eq: path },
+      path: { $eq: vscode.Uri.parse(path).toString() },
     });
   }
 }

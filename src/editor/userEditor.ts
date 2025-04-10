@@ -224,7 +224,7 @@ export async function checkForUserInputOnEditor(
     vscode.window.activeTextEditor?.document.uri.toString() === file.toString()
   ) {
     await new Promise((resolve) => setTimeout(resolve, 250));
-    console.log("waiting");
+    console.log("Checking for user input");
     if (
       vscode.window.activeTextEditor?.document.uri.toString() ===
       file.toString()
@@ -250,6 +250,7 @@ function verifyChangeOnWebview(webview: any, changeID: string) {
   if (llmResponse.code[0].hasPendingChanges) {
     chatHistory.handleChanges(changeID, true);
     chatService.changeChat(webview);
+    highlightDecoration.dispose();
   }
 }
 
@@ -325,7 +326,6 @@ async function getDecorationRangeFromChange(
       previousCodeArray[change.lines.start - 1].length
     );
   } else {
-    end = calculateNewEndPosition(change, start);
     end = calculateNewEndPosition(change, start);
   }
 
