@@ -30,7 +30,7 @@
               "gpt-4o",
               "gpt-4o-mini",
               "gpt-o3-mini",
-              "gpt-01"
+              "gpt-o1"
             ],
             "description": "OpenAI model for Coding Buddy to use. The extension was tested with all models, but it is recommended to use gpt-4-turbo for better results."
           },

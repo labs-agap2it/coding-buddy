@@ -6,29 +6,30 @@ Coding Buddy can read your codebase, write on selected files, and also just chat
 
 NOTE: The extension is currently in test phase, so use with caution (and Git, of course)!
 
-## Features: 
+## Features:
 
- - GPT models from 3.5 to 4o
- - Chat interface
- - Multiple Chat histories
- - Pop-up window with shortcut (Ctrl/CMD+Shift+Enter)
+- GPT models from 3.5, 4o, o1 and o3 mini
+- Chat interface
+- Multiple Chat histories
+- Pop-up window with shortcut (Ctrl/CMD+Shift+Enter)
 
-## Installation: 
+## Installation:
 
 #### Prerequisites:
 
 1. Visual Studio Code (1.90 or later)
 2. OpenAI API Key ([read this](#get-api-key))
-	1. OpenAI's ChatGPT Plus Subscription (optional, but recommended)
+   1. OpenAI's ChatGPT Plus Subscription (optional, but recommended)
 3. NodeJS (v20.14.0 or later, if you're building from source)
+
 ### Build Coding Buddy from source code
 
 #### Building the app
 
 1. Clone the repo to your local files.
 2. Open the source code using Visual Studio Code
-3. Run ```npm install``` 
-4. Press ```f5``` to run the debugger.
+3. Run `npm install --legacy-peer-deps`
+4. Press `f5` to run the debugger.
 
 ## First Use:
 
@@ -42,7 +43,7 @@ And you're good to go! Simple as that.
 ## Get API Key
 
 1. Go to [OpenAI's API Login page](https://platform.openai.com/login?launch) and log in using your account.
-	1. If there's a prompt to choose between ChatGPT and API, select API and proceed
+   1. If there's a prompt to choose between ChatGPT and API, select API and proceed
 2. On the top bar, select "Dashboard"
 
 ![Pasted image 20240611154202](https://github.com/labs-agap2it/coding-buddy/assets/68194332/39437483-beda-4e72-904f-1e611a11ef0c)
@@ -52,5 +53,5 @@ And you're good to go! Simple as that.
 ![Pasted image 20240611154358](https://github.com/labs-agap2it/coding-buddy/assets/68194332/db0c80e9-3063-460f-98e8-a6d5ed0a49b1)
 
 4. Click on "Create new Secret Key"
-	1. Give it a name if you wish, give it all Permissions, and create the key.
-	2. Save it in a safe place for later use on the extension.
+   1. Give it a name if you wish, give it all Permissions, and create the key.
+   2. Save it in a safe place for later use on the extension.
