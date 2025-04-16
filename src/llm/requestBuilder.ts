@@ -13,6 +13,7 @@ import vectraIndex from "../db/vectra";
 import { generateEmbedding } from "./embeddingConnection";
 import { llmAdditionalInfo } from "../model/llmResponse";
 import { getProjectId } from "../changeDetector/changeDetector";
+import { promptHistory } from "../tempManagement/promptHistory";
 
 export async function buildMessages(
   userMessage: string,
@@ -58,6 +59,17 @@ export async function buildMessages(
                 ###Context_End`,
     });
   });
+
+  if (promptHistory.length > 0) {
+    console.log("promptHistory: ", promptHistory);
+    messages.push({
+      role: "system",
+      content: `###Prompt_History_START
+                  ${promptHistory}
+                  ###Prompt_History_END
+        `,
+    });
+  }
 
   if (additionalInfo) {
     for (let i = 0; i < additionalInfo.length; i++) {

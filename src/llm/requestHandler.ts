@@ -1,5 +1,4 @@
 import * as webview from "../extension/webviewChat";
-//import { searchForKeywords } from "../fileSystem/fileSearch";
 import {
   llmAdditionalInfo,
   llmMessage,
@@ -8,15 +7,16 @@ import {
 } from "../model/llmResponse";
 import * as buddy from "./connection";
 import * as savedSettings from "../settings/savedSettings";
-import { prepareFilesForLLM } from "../fileSystem/fileReader";
-import { KeywordSearch } from "../model/keywordSearch";
 import * as vscode from "vscode";
 import * as chatHistory from "../tempManagement/chatHistory";
 import * as userEditor from "../editor/userEditor";
 import vectraIndex from "../db/vectra";
 import { generateEmbedding } from "./embeddingConnection";
-import { handle } from "../webview-assets/sidebar-webview/js/webviewHandler";
 import { getProjectId } from "../changeDetector/changeDetector";
+import {
+  clearPromptHistory,
+  promptHistory,
+} from "../tempManagement/promptHistory";
 
 export async function handleUserRequestToLLM(
   message: string,
@@ -72,6 +72,8 @@ async function handleSuccessResponse(
   if (content.willNeedMoreInfo) {
     await handleLLMAdditionalInfo(message, content, providerInstance);
   } else {
+    global.numberOfTries = 0;
+    clearPromptHistory();
     providerInstance.infoHistory = [];
     await handleEditorChanges(content, providerInstance);
     sendResponseToWebView(content, providerInstance);
@@ -148,5 +150,6 @@ export async function handleLLMAdditionalInfo(
       content: item.item.metadata.content as string,
     });
   });
+  promptHistory.push(response.promptForSearch);
   handleUserRequestToLLM(userPrompt, providerInstance, additionalInfo);
 }

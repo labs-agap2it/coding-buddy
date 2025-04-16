@@ -142,11 +142,21 @@ export const rulesets = `
 
   The prompt should be otimize for semantic search, so you should include terms semantically related to the user's request.
 
-  When sending the prompt try to ask for a specific file or a specific keyword (ex: if a user wants to fix a function, you should include the function's name in the prompt, or ask for something that is related to the function but never words like ("usage", "declaration", "example", "docs", "docstring", "comment", "definition", "call", "implementation", "tests", "testing", "error", "exception", "fix", "bug", "issue").
-
-  Remeber to use the context provied initially in the prompt and the opened file, to you construct the prompt.
+  When willNeedMoreInfo is true, you must generate a new and specific prompt asking for either (1) an exact file name, or (2) a specific keyword that appears in the actual content of the file, such as the name of a function, class, variable, or a string literal. 
   
-  Only send a prompt when you send the "willNeedMoreInfo" field to true.
+  Never use abstract or vague words such as "location", "usage", "declaration", "example", "docs", "docstring", "comment", "definition", "call", "implementation", "tests", "testing", "error", "exception", "fix", "bug", "issue", or any similar high-level or conceptual term. 
+  
+  These terms will not work with the semantic search, which only understands concrete elements present in the files. 
+  
+  Always build your prompt using the initial context provided and the currently opened file. 
+  
+  Only generate a prompt when willNeedMoreInfo is set to true. 
+  
+  If this is not the first time you're asking for more information about the same request, you will receive a message wrapped between ###Prompt_History_START and ###Prompt_History_END, containing all previous prompts that failed. 
+  
+  Do not repeat or slightly rephrase any of those prompts. 
+  
+  The new prompt must be entirely different, and must focus on actionable, concrete information that can be matched against the file contents or filenames.
 
   Keep in mind that if you find a connection between two files, you can search for the file's name using the workspace URI provided before. However, if the workspace URI is different than the opened file's URI, you won't find the file, so instead of requesting for a search, tell the user that the file they have open isn't on this workspace, and that they should switch to the folder containing that file so that you can search for an answer.
 
@@ -214,8 +224,6 @@ export const jsonFormat = `
     "willNeedMoreInfo": true, // If you need more information from the user's codebase. Only set to true when "additional_info" is not empty.
     "ignoredDirectories": ["folder_name", "another_folder_name"], // The directories you think aren't relevant to the search. Empty if no directories are to be ignored.
     "promptForSearch": "", // If you need more information that isn't provided in the code. Empty if no additional information is needed. Prompt will be used in the vector database search.
-
-    ],// If you need more information that isn't provided in the code. Empty if no additional information is needed.
     "explanation": "Your explanation here", //If the user's intent is to explain code. This is used only for old code that the user has sent you.
     "intent": "Your intent here" // The user's intent. This can be "generate", "fix", "explain" or "chat". Please only use these values.
   }

@@ -31,7 +31,7 @@ export async function getLLMJson(
       response_format: {
         type: "json_object",
       },
-      top_p: 0.4,
+      temperature: 0.2,
       messages: llmMessages,
     });
     if (!completion.choices[0].message.content) {
